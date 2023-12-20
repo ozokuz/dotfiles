@@ -1,0 +1,47 @@
+(defvar powermenu_state "closed")
+(defvar powermenu_monitor 0)
+
+(defwidget powermenu []
+  (box
+    :class "bg rounded-lg"
+    (button
+      :class "powerbutton poweroff"
+      :onclick "ew_toggle_window powermenu && systemctl poweroff"
+      "󰐥"
+    )
+    (button
+      :class "powerbutton reboot"
+      :onclick "ew_toggle_window powermenu && systemctl reboot"
+      ""
+    )
+    (button
+      :class "powerbutton logout"
+      :onclick "ew_toggle_window powermenu && hyprctl dispatch exit"
+      ""
+    )
+  )
+)
+
+(defwindow powermenu0
+  :monitor 0
+  :geometry (geometry
+    :width "1280px"
+    :height "480px"
+    :anchor "center center"
+  )
+  :stacking "fg"
+  :exclusive false
+  (powermenu)
+)
+
+(defwindow powermenu1
+  :monitor 1
+  :geometry (geometry
+    :width "1280px"
+    :height "480px"
+    :anchor "center center"
+  )
+  :stacking "fg"
+  :exclusive false
+  (powermenu)
+)

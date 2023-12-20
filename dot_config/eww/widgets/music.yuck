@@ -1,0 +1,114 @@
+(defvar music_state "closed")
+(defvar music_monitor 0)
+
+(deflisten music_cover_art :initial "music.png" "playerctl -p spotify --follow metadata -f '{{ mpris:artUrl }}'")
+(deflisten music_song_title :initial "Nothing" "playerctl -p spotify --follow metadata -f '{{ title }}'")
+(deflisten music_song_artist :initial "is playing" "playerctl -p spotify --follow metadata -f '{{ artist }}'")
+(deflisten music_is_playing :initial "Paused" "playerctl -p spotify --follow status")
+(deflisten music_length :initial 0 "playerctl -p spotify --follow metadata -f '{{ mpris:length }} / 1000000' | bc")
+(defpoll music_position :interval "1s" :run-while {music_state == "open"} "playerctl position")
+
+(defwidget coverart []
+  (box
+    :valign "center"
+    :class "music_cover_art"
+    :style "background-image: url('${music_cover_art}')"
+  )
+)
+
+(defwidget musictext []
+  (box
+    :orientation "vertical"
+    :vexpand false
+    :hexpand false
+    :space-evenly false
+    (label
+      :class "music_song_title"
+      :text music_song_title
+    )
+    (label
+      :text music_song_artist
+    )
+  )
+)
+
+(defwidget mediacontrols []
+  (box
+    :class "media_controls"
+    :space-evenly false
+    :halign "center"
+    (button
+      :onclick "playerctl -p spotify previous"
+      "󰒮"
+    )
+    (button
+      :style "margin-left: 20px; margin-right: 24px"
+      :onclick "playerctl -p spotify play-pause"
+      {music_is_playing == "Playing" ? "󰏦" : "󰐍"}
+    )
+    (button
+      :onclick "playerctl -p spotify next"
+      "󰒭"
+    )
+  )
+)
+
+(defwidget songprogress []
+  (progress
+    :value {music_position / music_length * 100}
+    :orientation "horizontal"
+  )
+)
+
+(defwidget musicinfo []
+  (box
+    :class "music_info"
+    :orientation "vertical"
+    (musictext)
+    (box
+      :orientation "vertical"
+      :space-evenly false
+      (mediacontrols)
+      (songprogress)
+    )
+  )
+)
+
+(defwidget musicpop []
+  (eventbox
+    :onhoverlost "ew_toggle_window music"
+    :class "bg rounded"
+    (box
+      (coverart)
+      (musicinfo)
+    )
+  )
+)
+
+(defwindow music0
+  :monitor 0
+  :geometry (geometry
+    :x "0%"
+    :y "20px"
+    :width "400px"
+    :height "200px"
+    :anchor "top center"
+  )
+  :stacking "fg"
+  :exclusive false
+  (musicpop)
+)
+
+(defwindow music1
+  :monitor 1
+  :geometry (geometry
+    :x "0%"
+    :y "20px"
+    :width "400px"
+    :height "200px"
+    :anchor "top center"
+  )
+  :stacking "fg"
+  :exclusive false
+  (musicpop)
+)

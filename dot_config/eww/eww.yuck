@@ -1,0 +1,4 @@
+; Widgets
+(include "./widgets/calendar.yuck")
+(include "./widgets/music.yuck")
+(include "./widgets/powermenu.yuck")

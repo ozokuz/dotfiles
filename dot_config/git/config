@@ -1,0 +1,12 @@
+[user]
+	name = Ozoku
+	email = 19756856+ozokuz@users.noreply.github.com
+[credential]
+	helper = cache
+[init]
+	defaultBranch = main
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

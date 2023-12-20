@@ -1,0 +1,5 @@
+default-timeout=1000
+font=Noto Sans 10
+border-radius=8
+background-color=#000000BB
+border-color=#333333BB

@@ -1,0 +1,125 @@
+/* General Styles */
+* {
+  all: unset;
+  font-family: Noto Sans;
+}
+
+.bg {
+  background-color: rgba(33, 33, 33, 0.9);
+}
+
+.rounded {
+  border-radius: 12px;
+}
+
+.rounded-lg {
+  border-radius: 20px;
+}
+
+/* Calendar Styles */
+.clock {
+  font-weight: bold;
+  font-size: 36px;
+}
+
+.calendar {
+  padding: 8px;
+
+  &:indeterminate {
+    color: #888;
+  }
+
+  &.highlight {
+    color: #09f;
+  }
+
+  &.button:hover {
+    color: #09f;
+  }
+}
+
+.calendar:selected {
+  background-color: #09f;
+}
+
+/* Music Styles */
+.music_cover_art {
+  background-size: cover;
+  background-position: center;
+  min-width: 170px;
+  min-height: 170px;
+  margin: 15px;
+  margin-right: 0px;
+  border-radius: 12px;
+}
+
+.music_info {
+  margin: 15px;
+}
+
+.music_song_title {
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.media_controls {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-family: Fira Code Nerd Font;
+  color: #09f;
+  button {
+    font-size: 24px;
+  }
+}
+
+progressbar {
+  trough {
+    min-height: 12px;
+    border-radius: 6px;
+    background-color: #444;
+  }
+  progress {
+    min-height: 12px;
+    border-radius: 6px;
+    background-color: #09f;
+  }
+}
+
+/* Power Menu Styles */
+
+.powerbutton {
+  font-size: 60px;
+}
+
+.poweroff {
+  color: #ff0000;
+
+  &:hover {
+    color: #ffffff;
+    background-color: #ff0000;
+    border-radius: 20px;
+  }
+}
+
+.reboot {
+  color: #ffaa00;
+
+  &:hover {
+    color: #ffffff;
+    background-color: #ffaa00;
+    border-radius: 20px;
+  }
+}
+
+.logout {
+  color: #22ff22;
+
+  &:hover {
+    color: #ffffff;
+    background-color: #22ff22;
+    border-radius: 20px;
+  }
+}
+
+/* Volume Styles */

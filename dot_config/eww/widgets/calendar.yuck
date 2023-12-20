@@ -1,0 +1,60 @@
+(defvar calendar_state "closed")
+(defvar calendar_monitor 0)
+
+(defpoll time :interval "1s" "date '+%T'")
+
+(defwidget clock []
+  (box
+    :class "bg rounded clock"
+    :style "padding: 10px"
+    time
+  )
+)
+
+(defwidget cal []
+  (box
+    :class "bg rounded"
+    (calendar :class "calendar")
+  )
+)
+
+(defwidget calpop []
+  (eventbox
+    :onhoverlost "ew_toggle_window calendar"
+    (box
+      :orientation "vertical"
+      :spacing 20
+      :space-evenly false
+      (clock)
+      (cal)
+    )
+  )
+)
+
+(defwindow calendar0
+  :monitor 0
+  :geometry (geometry
+    :x "20px"
+    :y "20px"
+    :width "400px"
+    :height "390px"
+    :anchor "top right"
+  )
+  :stacking "fg"
+  :exclusive false
+  (calpop)
+)
+
+(defwindow calendar1
+  :monitor 1
+  :geometry (geometry
+    :x "20px"
+    :y "20px"
+    :width "400px"
+    :height "390px"
+    :anchor "top right"
+  )
+  :stacking "fg"
+  :exclusive false
+  (calpop)
+)

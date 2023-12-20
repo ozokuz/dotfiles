@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Code Editing
+alias c="code"
+alias e="emacsclient -c -a 'emacs'"
+alias ef="fzf | xargs $EDITOR"
+alias v="$EDITOR"
+alias vf="fzf | xargs $EDITOR"
+
+# Directory Listing
+alias le="exa"
+alias l="le -l --icons"
+alias ll="l -a"
+alias lt="le -Ta --icons"
+alias ltl="lt -l"
+
+# Git
+alias g="git"
+alias gs="git status"
+alias gl="git log"
+alias gc="git commit"
+alias ga="git add"
+alias gap="git add -p"
+alias gd="git diff"
+alias gpl="git pull"
+alias gps="git push"
+alias lg="lazygit"
+
+# Other
+alias cl="clear"
+alias nvidia-settings="nvidia-settings --config='$XDG_CONFIG_HOME/nvidia/settings'"
