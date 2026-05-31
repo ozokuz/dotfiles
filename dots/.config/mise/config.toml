@@ -1,10 +1,24 @@
+[tools]
+go = "latest"
+node = "latest"
+pnpm = "latest"
+uv = "latest"
+erlang = "latest"
+bun = "latest"
+zig = "latest"
+deno = "latest"
+rust = "latest"
+ruby = "latest"
+elixir = "latest"
+"ubi:adwinying/php" = "latest"
+"ubi:composer/composer" = { version = "latest", postinstall = """
+bash -c 'composer_dir=$(mise where ubi:composer/composer)
+if [ -f "$composer_dir/composer.phar" ]; then
+  mv "$composer_dir/composer.phar" "$composer_dir/composer"
+fi'
+""" }
+
 [settings]
 python.uv_venv_auto = true
 idiomatic_version_file_enable_tools = []
 experimental = true
-
-[tools]
-bun = "latest"
-node = "latest"
-pnpm = "latest"
-uv = "latest"

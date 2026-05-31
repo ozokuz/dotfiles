@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGE_DIR="$ROOT_DIR/packages"
 DOTS_DIR="$ROOT_DIR/dots"
+HOST_OVERLAY_DIR="$ROOT_DIR/host-overlays"
 
 DRY_RUN=0
 ASSUME_YES=0
@@ -412,6 +413,71 @@ stow_dotfiles() {
   fi
 }
 
+link_host_file() {
+  local label="$1"
+  local source_file="$2"
+  local target_file="$3"
+  local link_target="$4"
+  local backup
+
+  [[ -e "$source_file" || -L "$source_file" ]] || return 0
+
+  log "Selecting $label overlay: $HOST"
+  if [[ -e "$target_file" || -L "$target_file" ]]; then
+    if [[ -L "$target_file" && "$(readlink "$target_file")" == "$link_target" ]]; then
+      return 0
+    fi
+
+    ensure_backup_dir
+    backup="$(backup_path_for "$target_file")"
+    log "Backing up existing $target_file to $backup"
+    if (( DRY_RUN )); then
+      log "[dry-run] mkdir -p $(dirname "$backup")"
+      log "[dry-run] mv $target_file $backup"
+    else
+      mkdir -p "$(dirname "$backup")"
+      mv "$target_file" "$backup"
+    fi
+  fi
+
+  if (( DRY_RUN )); then
+    log "[dry-run] mkdir -p $(dirname "$target_file")"
+    log "[dry-run] ln -s $link_target $target_file"
+  else
+    mkdir -p "$(dirname "$target_file")"
+    ln -s "$link_target" "$target_file"
+  fi
+}
+
+configure_host_overlays() {
+  local host_dir="$HOST_OVERLAY_DIR/$HOST"
+
+  link_host_file "Hyprland" \
+    "$host_dir/.config/hypr/overlay.conf" \
+    "$HOME/.config/hypr/overlays/current.conf" \
+    "$host_dir/.config/hypr/overlay.conf"
+
+  link_host_file "Hyprland DMS" \
+    "$host_dir/.config/hypr/dms" \
+    "$HOME/.config/hypr/dms" \
+    "$host_dir/.config/hypr/dms"
+
+  link_host_file "Niri" \
+    "$host_dir/.config/niri/overlay.kdl" \
+    "$HOME/.config/niri/overlays/current.kdl" \
+    "$host_dir/.config/niri/overlay.kdl"
+
+  link_host_file "Niri DMS" \
+    "$host_dir/.config/niri/dms" \
+    "$HOME/.config/niri/dms" \
+    "$host_dir/.config/niri/dms"
+
+  link_host_file "DankMaterialShell" \
+    "$host_dir/.config/DankMaterialShell/settings.json" \
+    "$HOME/.config/DankMaterialShell/settings.json" \
+    "$host_dir/.config/DankMaterialShell/settings.json"
+}
+
 enable_services() {
   local services=(NetworkManager bluetooth tailscaled)
 
@@ -506,6 +572,7 @@ main() {
   (( DRY_RUN )) || sudo -v
   install_selected_packages
   stow_dotfiles
+  configure_host_overlays
   configure_user
   enable_services
 

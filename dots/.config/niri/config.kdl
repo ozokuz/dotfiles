@@ -21,7 +21,6 @@ input {
             // You can set rules, model, layout, variant and options.
             // For more information, see xkeyboard-config(7).
 
-            layout "us,fi"
             // For example:
             // layout "us,ru"
             // options "grp:win_space_toggle,compose:ralt,ctrl:nocaps"
@@ -77,15 +76,8 @@ input {
 
     // Focus windows and outputs automatically when moving the mouse into them.
     // Setting max-scroll-amount="0%" makes it work only on windows already fully on screen.
-    focus-follows-mouse max-scroll-amount="0%"
+    focus-follows-mouse max-scroll-amount="50%"
 }
-// You can configure outputs by their name, which you can find
-// by running `niri msg outputs` while inside a niri instance.
-// The built-in laptop monitor is usually called "eDP-1".
-// Find more information on the wiki:
-// https://github.com/YaLTeR/niri/wiki/Configuration:-Outputs
-// Remember to uncomment the node by removing "/-"!
-
 // Settings that influence how windows are positioned and sized.
 // Find more information on the wiki:
 // https://github.com/YaLTeR/niri/wiki/Configuration:-Layout
@@ -104,9 +96,7 @@ layout {
         // Proportion sets the width as a fraction of the output width, taking gaps into account.
         // For example, you can perfectly fit four windows sized "proportion 0.25" on an output.
         // The default preset widths are 1/3, 1/2 and 2/3 of the output.
-        proportion 0.33333
         proportion 0.5
-        proportion 0.66667
         // Fixed sets the width in logical pixels exactly.
         // fixed 1920
     }
@@ -158,9 +148,6 @@ overview {
 // This line starts waybar, a commonly used bar for Wayland compositors.
 environment {
   XDG_CURRENT_DESKTOP "niri"
-  NVD_BACKEND "direct"
-  LIBVA_DRIVER_NAME "nvidia"
-  _JAVA_AWT_WM_NONREPARENTING "1"
 }
 hotkey-overlay {
     skip-at-startup
@@ -228,9 +215,13 @@ window-rule {
     match app-id=r#"^gnome-calculator$"#
     match app-id=r#"^galculator$"#
     match app-id=r#"^blueman-manager$"#
-    match app-id=r#"^steam$"#
     match app-id=r#"^xdg-desktop-portal$"#
     open-floating true
+}
+window-rule {
+    match app-id=r#"^steam$"# title=r#"^notificationtoasts_\d+_desktop$"#
+    default-floating-position x=10 y=10 relative-to="bottom-right"
+    open-focused false
 }
 window-rule {
     match app-id=r#"^org\.wezfurlong\.wezterm$"#
@@ -250,22 +241,12 @@ window-rule {
     match app-id=r#"org.quickshell$"#
     open-floating true
 }
-window-rule {
-    match app-id=r#"^(Minecraft\*) (\d+\.\d+\.\d+)$"#
-    open-on-output "DP-2"
-    default-column-width { proportion 1.0; }
-}
-window-rule {
-    match app-id="com.gabm.satty"
-    open-fullscreen true
-}
-window-rule {
-    match app-id="discord"
-    open-on-output "DP-3"
-    open-focused false
-}
 debug {
     honor-xdg-activation-with-invalid-serial
+}
+
+binds {
+    Mod+less { spawn "niri-scr"; }
 }
 
 // Override to disable super+tab
@@ -278,11 +259,6 @@ recent-windows {
     }
 }
 
-binds {
-  Super+less { spawn "niri-screenshot"; }
-  Super+Shift+less { spawn "niri-screenshot-clipboard"; }
-}
-
 // Include dms files
 include "dms/colors.kdl"
 include "dms/layout.kdl"
@@ -290,3 +266,4 @@ include "dms/alttab.kdl"
 include "dms/binds.kdl"
 include "dms/outputs.kdl"
 include "dms/cursor.kdl"
+include "overlays/current.kdl"

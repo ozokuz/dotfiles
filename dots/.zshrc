@@ -8,7 +8,6 @@ source "${ZINIT_HOME}/zinit.zsh"
 zinit light zsh-users/zsh-syntax-highlighting
 zinit light zsh-users/zsh-completions
 zinit light zsh-users/zsh-autosuggestions
-zinit light Aloxaf/fzf-tab
 
 # Snippets
 zinit snippet OMZL::git.zsh
@@ -22,21 +21,15 @@ autoload -Uz compinit && compinit
 zinit cdreplay -q
 
 # Completion Styling
-zstyle ':completion:*' menu no
+zstyle ':completion:*' menu selection
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'     # Case-insensitive matching
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}   # Colored completions
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
 #zstyle ':completion:*' group-name ''                     # Group completions
 #zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
 #zstyle ':completion:*:warnings' format '%F{red}-- no matches --%f'
 
 # Keybindings
 bindkey -e                                        # Emacs bindings mode
-backward-kill-slash-separated() {
-  local WORDCHARS=${WORDCHARS//\/}
-  zle backward-kill-word
-}
-zle -N backward-kill-slash-separated
 bindkey '^p' history-search-backward              # Ctrl+P
 bindkey '^n' history-search-forward               # Ctrl+N
 bindkey '^[[1;5C' forward-word                    # Ctrl+Right
@@ -47,7 +40,6 @@ bindkey '^H' backward-kill-word                   # Ctrl+Backspace
 bindkey '^[[3;5~' kill-word                       # Ctrl+Delete
 bindkey '^[[3~' delete-char                       # Delete key
 bindkey ' ' magic-space                           # Space
-bindkey "^[^?" backward-kill-slash-separated                 # Alt+Backspace
 
 # History
 HISTSIZE=5000
@@ -67,7 +59,6 @@ alias l='eza -la --group-directories-first --icons=auto'
 alias lg='lazygit'
 alias v='nvim'
 alias vf='nvim $(fzf)'
-alias zf='__zoxide_zi'
 
 # Suffix Aliases
 alias -s json=jless

@@ -1,4 +1,14 @@
 ## Titan Laptop
+- brightnessctl
 - bluez
 - bluez-utils
+- intel-media-driver
+- intel-ucode
+- keyd
+- lib32-vulkan-intel
+- nvidia-prime
+- sof-firmware
+- tlp
+- tlp-pd
+- vulkan-intel
 - power-profiles-daemon

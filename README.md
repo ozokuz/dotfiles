@@ -39,6 +39,7 @@ Run with explicit host defaults:
 ```sh
 ./setup.sh --host saturn --session hyprland
 ./setup.sh --host titan --session niri --dry-run
+./setup.sh --host titan --session hyprland --groups desktop-common,apps,dev,hyprland --dry-run
 ```
 
 ## Model
@@ -48,6 +49,17 @@ Run with explicit host defaults:
 - `packages/groups` contains optional groups such as `dev`, `gaming`, `virtualization`, `hyprland`, `niri`, and `flatpak-gaming`.
 - `packages/hosts` contains host overlays such as `saturn` and `titan`.
 - `dots` is managed with GNU Stow and currently owns curated shell dotfiles.
+- `host-overlays/<host>` contains machine-specific dotfiles that should not be
+  part of the generic Stow tree.
+- Compositor configs are shared by default. Host-specific Hyprland and Niri
+  settings live in `host-overlays/<host>/.config/{hypr,niri}/overlay.*`; setup
+  links them into `~/.config/{hypr,niri}/overlays/current.*` after stowing.
+- DankMaterialShell-generated compositor files are host-specific. Setup links
+  `~/.config/{hypr,niri}/dms` to
+  `host-overlays/<host>/.config/{hypr,niri}/dms`.
+- DankMaterialShell settings are host-specific. Setup links
+  `~/.config/DankMaterialShell/settings.json` to
+  `host-overlays/<host>/.config/DankMaterialShell/settings.json`.
 
 The default `saturn` setup selects:
 
@@ -60,6 +72,10 @@ The default `titan` setup selects:
 ```text
 desktop-common,apps,dev,niri
 ```
+
+`titan` is the laptop profile. It stays lean by default and can opt into larger
+workstation sets when needed, for example `hyprland`, `gaming`, or
+`virtualization`.
 
 ## Safety
 

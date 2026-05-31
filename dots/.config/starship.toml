@@ -9,7 +9,7 @@ $git_branch\
 $git_status\
 [\ue0b0](blue2 bg:blue3)\
 $directory\
-[ ](bg:blue3)[\ue0b0](blue3)[ ]()
+[ ](bg:blue3)[\ue0b0](blue3)
 """
 
 palette = "tokyonight_storm"

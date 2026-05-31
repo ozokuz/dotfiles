@@ -4,10 +4,12 @@
 - docker-buildx
 - docker-compose
 - iptables-nft
+- libguestfs
 - nvidia-container-toolkit
 - podman
 - qemu-desktop
 - swtpm
+- ufw
 - virt-manager
 - virtualbox
 - virtualbox-guest-iso

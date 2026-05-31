@@ -10,8 +10,10 @@ set incsearch
 set hlsearch
 set ignorecase
 set smartcase
+set clipboard+=unnamed
 set clipboard+=unnamedplus
 set ideajoin
+set ideaput
 set timeoutlen=500
 set visualbell
 
@@ -20,7 +22,8 @@ set visualbell
 set surround
 set commentary
 set highlightedyank
-" set easymotion
+set easymotion
+set which-key
 
 " ---------- Leader keys ----------
 let mapleader=" "
@@ -45,6 +48,7 @@ nnoremap <S-h> :action PreviousTab<CR>
 nnoremap <S-l> :action NextTab<CR>
 
 " ---------- Save/quit ----------
+nnoremap <leader>w :w<CR>
 nnoremap <leader>q :q<CR>
 nnoremap <leader>Q :qa!<CR>
 
@@ -58,6 +62,7 @@ nnoremap <leader>fs :action GotoSymbol<CR>
 
 " ---------- Explorer / project ----------
 nnoremap <leader>e :action ActivateProjectToolWindow<CR>
+nnoremap <leader>pv :action ActivateProjectToolWindow<CR>
 
 " ---------- LSP/code actions ----------
 nnoremap gd :action GotoDeclaration<CR>
@@ -70,12 +75,22 @@ nnoremap <leader>cr :action RenameElement<CR>
 nnoremap <leader>cf :action ReformatCode<CR>
 nnoremap <leader>cF :action OptimizeImports<CR>
 
+" ---------- Git ----------
+nnoremap <leader>gg :action Vcs.QuickListPopupAction<CR>
+nnoremap <leader>gb :action Annotate<CR>
+nnoremap <leader>gd :action Compare.SameVersion<CR>
+
 " ---------- Diagnostics / navigation ----------
 nnoremap [d :action GotoPreviousError<CR>
 nnoremap ]d :action GotoNextError<CR>
+nnoremap <leader>xx :action ProblemsView.ToolWindow.Show<CR>
 
 " ---------- Terminal ----------
 nnoremap <leader>ft :action ActivateTerminalToolWindow<CR>
+
+" ---------- Comments ----------
+nnoremap <leader>/ :action CommentByLineComment<CR>
+vnoremap <leader>/ :action CommentByLineComment<CR>
 
 " ---------- Misc quality-of-life ----------
 nnoremap <Esc> :nohlsearch<CR>
@@ -83,8 +98,6 @@ nnoremap <leader>bd :action CloseContent<CR>
 nnoremap <leader>bn :action NextTab<CR>
 nnoremap <leader>bp :action PreviousTab<CR>
 
-" WTF Idea?
-vnoremap p \"+p
 " ---------- Notes ----------
 " If a mapping does nothing, open :actionlist and search for the exact action name
 " in your IDE/version, then replace it here.
