@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+screenshot_path="$(xdg-user-dir PICTURES)/screenshot.png"
+last_screenshot_path="$(xdg-user-dir PICTURES)/last_screenshot.png"
+
+if [ -f "$screenshot_path" ]; then
+  mv "$screenshot_path" "$last_screenshot_path"
+fi
+
+if ! dms screenshot full --stdout | satty --filename - -o "$screenshot_path"; then
+  notify-send "Screenshot" "Canceled"
+  exit 1
+fi
+
+if [ ! -s "$screenshot_path" ]; then
+  notify-send "Screenshot" "Canceled"
+  exit 1
+fi
+
+if ! wl-copy --type image/png < "$screenshot_path"; then
+  notify-send "Screenshot" "Clipboard copy failed"
+  exit 1
+fi
+
+notify-send "Screenshot" "Screenshot copied to clipboard."

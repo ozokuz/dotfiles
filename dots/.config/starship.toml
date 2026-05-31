@@ -1,0 +1,48 @@
+add_newline = true
+format = """
+[\ue0b6](blue1)\
+$username\
+[@](bold bg:blue1 gray1)\
+$hostname\
+[\ue0b0](blue1 bg:blue2)\
+$git_branch\
+$git_status\
+[\ue0b0](blue2 bg:blue3)\
+$directory\
+[ ](bg:blue3)[\ue0b0](blue3)[ ]()
+"""
+
+palette = "tokyonight_storm"
+
+[username]
+show_always = true
+format = "[$user]($style)"
+style_user = "bold bg:blue1 green1"
+
+[hostname]
+ssh_only = false
+format = "[$hostname ]($style)"
+style = "bold bg:blue1 purple1"
+
+[git_branch]
+format = "[ $symbol$branch ]($style)"
+style = "bold bg:blue2 gray1"
+
+[git_status]
+format = "[\\[$all_status$ahead_behind\\] ]($style)"
+style = "bold bg:blue2 gray1"
+
+[directory]
+format = "[ $path]($style)[$read_only]($read_only_style)"
+style = "bold bg:blue3"
+fish_style_pwd_dir_length = 1
+
+[palettes.tokyonight_storm]
+blue1 = "#769ff0"
+blue2 = "#576bb8"
+blue3 = "#394260"
+blue4 = "#212736"
+blue5 = "#1d2230"
+gray1 = "#e3e5e5"
+green1 = "#aedd8d"
+purple1 = "#dd99ff"

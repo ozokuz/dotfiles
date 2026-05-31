@@ -1,0 +1,12 @@
+## Hyprland
+- awww
+- greetd
+- hypridle
+- hyprland
+- hyprlock
+- hyprpicker
+- hyprpolkitagent
+- quickshell
+- uwsm
+- xdg-desktop-portal-gtk
+- xdg-desktop-portal-hyprland

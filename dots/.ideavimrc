@@ -1,0 +1,90 @@
+" IdeaVim config with LazyVim-style ergonomics
+" Location: ~/.ideavimrc
+
+" ---------- Core Vim behavior ----------
+set number
+set relativenumber
+set scrolloff=8
+set sidescrolloff=8
+set incsearch
+set hlsearch
+set ignorecase
+set smartcase
+set clipboard+=unnamedplus
+set ideajoin
+set timeoutlen=500
+set visualbell
+
+" ---------- Plugins shipped via IdeaVim extensions ----------
+" Enable these in IDE Settings > IdeaVim if needed.
+set surround
+set commentary
+set highlightedyank
+" set easymotion
+
+" ---------- Leader keys ----------
+let mapleader=" "
+let maplocalleader=","
+
+" ---------- Better movement ----------
+nnoremap H ^
+nnoremap L $
+
+" Keep selection when indenting in visual mode
+vnoremap < <gv
+vnoremap > >gv
+
+" ---------- Window navigation (LazyVim-like) ----------
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+
+" ---------- Buffer/tab navigation ----------
+nnoremap <S-h> :action PreviousTab<CR>
+nnoremap <S-l> :action NextTab<CR>
+
+" ---------- Save/quit ----------
+nnoremap <leader>q :q<CR>
+nnoremap <leader>Q :qa!<CR>
+
+" ---------- File/search (Telescope-like) ----------
+nnoremap <leader><leader> :action SearchEverywhere<CR>
+nnoremap <leader>ff :action GotoFile<CR>
+nnoremap <leader>fr :action RecentFiles<CR>
+nnoremap <leader>fg :action FindInPath<CR>
+nnoremap <leader>fc :action GotoClass<CR>
+nnoremap <leader>fs :action GotoSymbol<CR>
+
+" ---------- Explorer / project ----------
+nnoremap <leader>e :action ActivateProjectToolWindow<CR>
+
+" ---------- LSP/code actions ----------
+nnoremap gd :action GotoDeclaration<CR>
+nnoremap gD :action GotoTypeDeclaration<CR>
+nnoremap gr :action FindUsages<CR>
+nnoremap gi :action GotoImplementation<CR>
+nnoremap K :action QuickJavaDoc<CR>
+nnoremap <leader>ca :action ShowIntentionActions<CR>
+nnoremap <leader>cr :action RenameElement<CR>
+nnoremap <leader>cf :action ReformatCode<CR>
+nnoremap <leader>cF :action OptimizeImports<CR>
+
+" ---------- Diagnostics / navigation ----------
+nnoremap [d :action GotoPreviousError<CR>
+nnoremap ]d :action GotoNextError<CR>
+
+" ---------- Terminal ----------
+nnoremap <leader>ft :action ActivateTerminalToolWindow<CR>
+
+" ---------- Misc quality-of-life ----------
+nnoremap <Esc> :nohlsearch<CR>
+nnoremap <leader>bd :action CloseContent<CR>
+nnoremap <leader>bn :action NextTab<CR>
+nnoremap <leader>bp :action PreviousTab<CR>
+
+" WTF Idea?
+vnoremap p \"+p
+" ---------- Notes ----------
+" If a mapping does nothing, open :actionlist and search for the exact action name
+" in your IDE/version, then replace it here.

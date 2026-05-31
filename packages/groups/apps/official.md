@@ -1,0 +1,11 @@
+## Apps
+- bitwarden
+- discord
+- kdenlive
+- krita
+- lan-mouse
+- libresprite
+- obsidian
+- scrcpy
+- spotify-launcher
+- telegram-desktop

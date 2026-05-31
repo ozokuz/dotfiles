@@ -1,0 +1,13 @@
+## Virtualization
+- dnsmasq
+- docker
+- docker-buildx
+- docker-compose
+- iptables-nft
+- nvidia-container-toolkit
+- podman
+- qemu-desktop
+- swtpm
+- virt-manager
+- virtualbox
+- virtualbox-guest-iso

@@ -1,0 +1,35 @@
+[credential "https://github.com"]
+  helper =
+  helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+  helper =
+  helper = !/usr/bin/gh auth git-credential
+[init]
+  defaultBranch = main
+[rebase]
+  autosquash = true
+  autostash = true
+  updateRefs = true
+[push]
+  autoSetupRemote = true
+[commit]
+  verbose = true
+[rerere]
+  enabled = true
+[core]
+  pager = delta
+[diff]
+  algorithm = histogram
+[column]
+  ui = auto
+[branch]
+  sort = -committerdate
+[user]
+	name = Ozoku
+	email = 19756856+ozokuz@users.noreply.github.com
+[http]
+	lowSpeedLimit = 1000
+	lowSpeedTime = 60
+	postBuffer = 524288000
+[delta]
+	side-by-side = true

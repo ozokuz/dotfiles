@@ -1,0 +1,14 @@
+app.xemu.xemu
+com.github.libresprite.LibreSprite
+com.github.tchx84.Flatseal
+com.obsproject.Studio
+com.usebottles.bottles
+com.vysp3r.ProtonPlus
+dev.ftb.ftb-app
+io.github.shiiion.primehack
+moe.launcher.sleepy-launcher
+net.kuribo64.melonDS
+org.DolphinEmu.dolphin-emu
+org.libretro.RetroArch
+org.ppsspp.PPSSPP
+page.kramo.Cartridges
