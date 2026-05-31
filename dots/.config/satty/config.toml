@@ -1,0 +1,6 @@
+[general]
+fullscreen = true
+early-exit = true
+initial-tool = "crop"
+actions-on-enter = ["save-to-file"]
+disable-notifications = true
