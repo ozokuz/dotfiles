@@ -2,7 +2,6 @@ $env.config.buffer_editor = "nvim"
 $env.config.show_banner = false
 
 $env.path ++= ["~/.local/bin"]
-$env.path ++= ["~/.local/share/nova/bin"]
 $env.path ++= ["~/.local/armgcc/bin"]
 $env.path ++= ["~/.local/share/JetBrains/Toolbox/scripts"]
 $env.EDITOR = "nvim"
