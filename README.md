@@ -42,12 +42,29 @@ Run with explicit host defaults:
 ./setup.sh --host titan --session hyprland --groups desktop-common,apps,dev,hyprland --dry-run
 ```
 
+Install only specific packages from the selected package categories:
+
+```sh
+./setup.sh --host titan --packages ghostty,neovim,bitwarden --dry-run
+./setup.sh --host saturn --categories apps,dev --packages obsidian,mise --dry-run
+./setup.sh --host titan --distro cachyos --packages ghostty --dry-run
+```
+
+When run interactively, package selection opens a multi-select menu with preset
+packages preselected. The menu shows packages from every repo category, host,
+and distro list so presets are only starting points. Use arrow keys to move,
+Space to toggle packages, and Enter to confirm. Enter `all` at the package
+selection prompt to skip the selector and install the full selected preset.
+
 ## Model
 
 - `setup.sh` is the main entrypoint.
 - `packages/common` contains packages shared by all machines.
-- `packages/groups` contains optional groups such as `dev`, `gaming`, `virtualization`, `hyprland`, `niri`, and `flatpak-gaming`.
-- `packages/hosts` contains host overlays such as `saturn` and `titan`.
+- `packages/groups` contains selectable package categories such as `dev`, `gaming`, `virtualization`, `hyprland`, `niri`, and `flatpak-gaming`.
+- `packages/hosts` contains host presets such as `saturn` and `titan`.
+  Host presets choose default categories and package selections; package
+  definitions live in common, group, and distro lists.
+- `packages/distros` contains distro presets and overlays such as `arch` and `cachyos`.
 - `dots` is managed with GNU Stow and currently owns curated shell dotfiles.
 - `host-overlays/<host>` contains machine-specific dotfiles that should not be
   part of the generic Stow tree.
@@ -82,4 +99,4 @@ workstation sets when needed, for example `hyprland`, `gaming`, or
 - Use `--dry-run` to preview actions.
 - Existing dotfile conflicts are moved to `~/.dotfiles-backups/<timestamp>/`.
 - Secrets are not stored in this repo. After setup, authenticate tools manually, for example `gh auth login`, `tailscale up`, Bitwarden, and SSH keys.
-- `~/.local/bin/niri-screenshot` expects a local `~/.local/upload_url.txt`; keep that file out of the repo.
+- `~/.local/bin/screenshot-upload` expects a local `~/.local/upload_url.txt`; keep that file out of the repo.

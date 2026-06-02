@@ -7,6 +7,7 @@
 - file-roller
 - ghostty
 - gimp
+- greetd
 - grim
 - gvfs-mtp
 - imv
@@ -23,14 +24,16 @@
 - playerctl
 - pipewire
 - pipewire-pulse
-- power-profiles-daemon
 - qpwgraph
+- quickshell
 - qt6ct
 - satty
 - seahorse
 - sushi
 - ttf-jetbrains-mono-nerd
+- uwsm
 - wev
 - wl-clipboard
 - xclip
+- xdg-desktop-portal-gtk
 - xwayland-satellite

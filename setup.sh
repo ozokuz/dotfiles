@@ -9,13 +9,15 @@ HOST_OVERLAY_DIR="$ROOT_DIR/host-overlays"
 DRY_RUN=0
 ASSUME_YES=0
 HOST=""
+DISTRO=""
+DISTRO_SET=0
 SESSION=""
-SELECTED_GROUPS=""
+SELECTED_CATEGORIES=""
+SELECTED_PACKAGES=""
+EXCLUDED_PACKAGES=""
+PRESET_PACKAGES=""
 PROFILE="workstation"
 BACKUP_DIR=""
-
-DEFAULT_SATURN_GROUPS="desktop-common,apps,dev,gaming,virtualization,flatpak-gaming"
-DEFAULT_TITAN_GROUPS="desktop-common,apps,dev"
 
 usage() {
   cat <<'EOF'
@@ -25,15 +27,20 @@ Options:
   --dry-run                 Print actions without applying them.
   --yes                     Do not prompt for confirmation.
   --host NAME               Host profile: saturn, titan, or custom.
+  --distro NAME             Distro preset: arch or cachyos. Default: detected.
   --session NAME            Desktop session: hyprland or niri.
-  --groups LIST             Comma-separated groups to install.
+  --categories LIST         Comma-separated package categories to install.
+  --groups LIST             Alias for --categories.
+  --packages LIST           Comma-separated package names to install from selected categories.
+  --exclude-packages LIST   Comma-separated package names to skip.
   --profile NAME            Profile label for display only. Default: workstation.
   -h, --help                Show this help.
 
 Examples:
   ./setup.sh --dry-run
-  ./setup.sh --host saturn --session hyprland --groups desktop-common,apps,dev,gaming,virtualization,flatpak-gaming
+  ./setup.sh --host saturn --session hyprland --categories desktop-common,apps,dev,gaming,virtualization,flatpak-gaming
   ./setup.sh --host titan --session niri --dry-run
+  ./setup.sh --host titan --packages ghostty,neovim,bitwarden --dry-run
 EOF
 }
 
@@ -85,12 +92,25 @@ parse_args() {
         HOST="${2:-}"
         shift
         ;;
+      --distro)
+        DISTRO="${2:-}"
+        DISTRO_SET=1
+        shift
+        ;;
       --session)
         SESSION="${2:-}"
         shift
         ;;
-      --groups)
-        SELECTED_GROUPS="${2:-}"
+      --categories|--groups)
+        SELECTED_CATEGORIES="${2:-}"
+        shift
+        ;;
+      --packages)
+        SELECTED_PACKAGES="${2:-}"
+        shift
+        ;;
+      --exclude-packages)
+        EXCLUDED_PACKAGES="${2:-}"
         shift
         ;;
       --profile)
@@ -139,6 +159,20 @@ prompt_default() {
   printf -v "$var_name" '%s' "${value:-$default}"
 }
 
+prompt_package_selection() {
+  local entries=()
+  local preset=()
+  local selected selected_csv
+
+  mapfile -t entries < <(all_package_entries)
+  mapfile -t preset < <(available_package_items)
+  ((${#entries[@]})) || return 0
+
+  selected="$(printf '%s\n' "${preset[@]}")"
+  selected_csv="$(package_selector_tui entries "$selected")"
+  SELECTED_PACKAGES="$selected_csv"
+}
+
 normalize_group_list() {
   local raw="$1"
   raw="${raw// /}"
@@ -149,7 +183,7 @@ normalize_group_list() {
 contains_group() {
   local needle="$1"
   local item
-  IFS=',' read -r -a items <<< "$SELECTED_GROUPS"
+  IFS=',' read -r -a items <<< "$SELECTED_CATEGORIES"
   for item in "${items[@]}"; do
     [[ "$item" == "$needle" ]] && return 0
   done
@@ -159,16 +193,25 @@ contains_group() {
 append_group_once() {
   local group="$1"
   contains_group "$group" && return 0
-  if [[ -z "$SELECTED_GROUPS" ]]; then
-    SELECTED_GROUPS="$group"
+  if [[ -z "$SELECTED_CATEGORIES" ]]; then
+    SELECTED_CATEGORIES="$group"
   else
-    SELECTED_GROUPS="$SELECTED_GROUPS,$group"
+    SELECTED_CATEGORIES="$SELECTED_CATEGORIES,$group"
   fi
+}
+
+load_preset_value() {
+  local file="$1"
+  local key="$2"
+  [[ -f "$file" ]] || return 0
+  awk -F= -v key="$key" '$1 == key { print substr($0, length(key) + 2); exit }' "$file"
 }
 
 resolve_defaults() {
   local detected_host
+  local host_preset distro_preset preset_session preset_categories preset_packages distro_categories
   detected_host="$(host_name)"
+  [[ -n "$DISTRO" ]] || DISTRO="$(distro_id)"
 
   if [[ -z "$HOST" ]]; then
     if (( ASSUME_YES )); then
@@ -178,27 +221,40 @@ resolve_defaults() {
     fi
   fi
 
-  case "$HOST" in
-    saturn)
-      [[ -n "$SESSION" ]] || SESSION="hyprland"
-      [[ -n "$SELECTED_GROUPS" ]] || SELECTED_GROUPS="$DEFAULT_SATURN_GROUPS"
-      ;;
-    titan)
-      [[ -n "$SESSION" ]] || SESSION="niri"
-      [[ -n "$SELECTED_GROUPS" ]] || SELECTED_GROUPS="$DEFAULT_TITAN_GROUPS"
+  if (( ! ASSUME_YES && ! DISTRO_SET )); then
+    prompt_default DISTRO "Distro preset (arch/cachyos)" "$(distro_id)"
+  fi
+
+  case "$DISTRO" in
+    arch|cachyos)
       ;;
     *)
-      [[ -n "$SESSION" ]] || SESSION="hyprland"
-      [[ -n "$SELECTED_GROUPS" ]] || SELECTED_GROUPS="desktop-common,apps,dev"
+      die "unsupported distro preset: $DISTRO. Expected arch or cachyos."
       ;;
   esac
 
-  if (( ! ASSUME_YES )); then
-    prompt_default SESSION "Desktop session (hyprland/niri)" "$SESSION"
-    prompt_default SELECTED_GROUPS "Package groups" "$SELECTED_GROUPS"
+  host_preset="$PACKAGE_DIR/hosts/$HOST/preset.conf"
+  distro_preset="$PACKAGE_DIR/distros/$DISTRO/preset.conf"
+  preset_session="$(load_preset_value "$host_preset" SESSION)"
+  preset_categories="$(load_preset_value "$host_preset" CATEGORIES)"
+  preset_packages="$(load_preset_value "$host_preset" PACKAGES)"
+  distro_categories="$(load_preset_value "$distro_preset" CATEGORIES)"
+  PRESET_PACKAGES="$(normalize_group_list "$preset_packages")"
+
+  [[ -n "$SESSION" ]] || SESSION="${preset_session:-hyprland}"
+  [[ -n "$SELECTED_CATEGORIES" ]] || SELECTED_CATEGORIES="${preset_categories:-desktop-common,apps,dev}"
+  if [[ -n "$distro_categories" ]]; then
+    SELECTED_CATEGORIES="$(normalize_group_list "$SELECTED_CATEGORIES,$distro_categories")"
   fi
 
-  SELECTED_GROUPS="$(normalize_group_list "$SELECTED_GROUPS")"
+  if (( ! ASSUME_YES )); then
+    prompt_default SESSION "Desktop session (hyprland/niri)" "$SESSION"
+    prompt_default SELECTED_CATEGORIES "Package categories" "$SELECTED_CATEGORIES"
+  fi
+
+  SELECTED_CATEGORIES="$(normalize_group_list "$SELECTED_CATEGORIES")"
+  SELECTED_PACKAGES="$(normalize_group_list "$SELECTED_PACKAGES")"
+  EXCLUDED_PACKAGES="$(normalize_group_list "$EXCLUDED_PACKAGES")"
 
   case "$SESSION" in
     hyprland|niri)
@@ -210,6 +266,22 @@ resolve_defaults() {
       die "unsupported session: $SESSION"
       ;;
   esac
+
+  if (( ! ASSUME_YES )) && [[ -z "$SELECTED_PACKAGES" ]]; then
+    local package_mode=""
+    prompt_default package_mode "Package selection (select/all)" "select"
+    case "$package_mode" in
+      all|"")
+        ;;
+      select)
+        prompt_package_selection
+        SELECTED_PACKAGES="$(normalize_group_list "$SELECTED_PACKAGES")"
+        ;;
+      *)
+        SELECTED_PACKAGES="$(normalize_group_list "$package_mode")"
+        ;;
+    esac
+  fi
 }
 
 clean_manifest() {
@@ -230,13 +302,13 @@ manifest_files_for_source() {
   local group
 
   [[ -f "$PACKAGE_DIR/common/$source" ]] && printf '%s\n' "$PACKAGE_DIR/common/$source"
+  [[ -f "$PACKAGE_DIR/distros/$DISTRO/$source" ]] && printf '%s\n' "$PACKAGE_DIR/distros/$DISTRO/$source"
 
-  IFS=',' read -r -a group_items <<< "$SELECTED_GROUPS"
+  IFS=',' read -r -a group_items <<< "$SELECTED_CATEGORIES"
   for group in "${group_items[@]}"; do
     [[ -f "$PACKAGE_DIR/groups/$group/$source" ]] && printf '%s\n' "$PACKAGE_DIR/groups/$group/$source"
   done
 
-  [[ -f "$PACKAGE_DIR/hosts/$HOST/$source" ]] && printf '%s\n' "$PACKAGE_DIR/hosts/$HOST/$source"
 }
 
 collect_items() {
@@ -245,6 +317,267 @@ collect_items() {
   while IFS= read -r file; do
     clean_manifest "$file"
   done < <(manifest_files_for_source "$source") | awk '!seen[$0]++'
+}
+
+collect_install_items() {
+  local source="$1"
+  local file
+
+  if [[ -n "$SELECTED_PACKAGES" ]]; then
+    collect_all_items "$source"
+    return 0
+  fi
+
+  {
+    collect_items "$source"
+    collect_preset_items "$source"
+  } | awk '!seen[$0]++'
+}
+
+available_package_items() {
+  local source
+  {
+    for source in official.md chaotic-aur.md lizardbyte.md aur.md flatpak.txt; do
+      collect_items "$source"
+    done
+    csv_to_lines "$PRESET_PACKAGES"
+  } | awk '!seen[$0]++' | sort
+}
+
+csv_to_lines() {
+  local list="$1"
+  local item
+  [[ -n "$list" ]] || return 0
+  IFS=',' read -r -a items <<< "$list"
+  for item in "${items[@]}"; do
+    [[ -n "$item" ]] && printf '%s\n' "$item"
+  done
+}
+
+collect_preset_items() {
+  local source="$1"
+  local item
+  [[ -n "$PRESET_PACKAGES" ]] || return 0
+
+  while IFS= read -r item; do
+    [[ -n "$item" ]] || continue
+    if collect_all_items "$source" | grep -Fxq "$item"; then
+      printf '%s\n' "$item"
+    fi
+  done < <(csv_to_lines "$PRESET_PACKAGES")
+}
+
+collect_all_items() {
+  local source="$1"
+  local file
+  find "$PACKAGE_DIR/common" "$PACKAGE_DIR/groups" "$PACKAGE_DIR/distros" -mindepth 1 -maxdepth 4 -type f -name "$source" -print0 2>/dev/null |
+    while IFS= read -r -d '' file; do
+      clean_manifest "$file"
+    done | awk '!seen[$0]++'
+}
+
+available_category_items() {
+  local source
+  for source in official.md chaotic-aur.md lizardbyte.md aur.md flatpak.txt; do
+    collect_items "$source"
+  done | awk '!seen[$0]++' | sort
+}
+
+all_package_items() {
+  local source
+  for source in official.md chaotic-aur.md lizardbyte.md aur.md flatpak.txt; do
+    collect_all_items "$source"
+  done | awk '!seen[$0]++' | sort
+}
+
+package_label_for_file() {
+  local file="$1"
+  local rel="${file#$PACKAGE_DIR/}"
+  local source="${rel##*/}"
+  local dir="${rel%/*}"
+
+  case "$source" in
+    official.md) source="official" ;;
+    chaotic-aur.md) source="chaotic" ;;
+    lizardbyte.md) source="lizardbyte" ;;
+    aur.md) source="aur" ;;
+    flatpak.txt) source="flatpak" ;;
+  esac
+
+  printf '%s/%s\n' "$dir" "$source"
+}
+
+all_package_entries() {
+  local source file label
+  for source in official.md chaotic-aur.md lizardbyte.md aur.md flatpak.txt; do
+    find "$PACKAGE_DIR/common" "$PACKAGE_DIR/groups" "$PACKAGE_DIR/distros" -mindepth 1 -maxdepth 4 -type f -name "$source" -print0 2>/dev/null |
+      while IFS= read -r -d '' file; do
+        label="$(package_label_for_file "$file")"
+        clean_manifest "$file" | awk -v label="$label" 'NF { print label "\t" $0 }'
+      done
+  done | sort -t $'\t' -k1,1 -k2,2 |
+    awk -F '\t' '
+      $1 != current {
+        current = $1
+        print "H\t" current
+      }
+      { print "P\t" $1 "\t" $2 }
+    '
+}
+
+package_selector_tui() {
+  local -n entries_ref="$1"
+  local initial_selected="$2"
+  local cursor=0 offset=0 page_size=18 key entry type label item i marker selected_csv
+  local term_lines
+  declare -A selected_map=()
+
+  while IFS= read -r item; do
+    [[ -n "$item" ]] && selected_map["$item"]=1
+  done <<< "$initial_selected"
+
+  cleanup_selector() {
+    stty sane 2>/dev/null || true
+    printf '\033[?25h\033[?1049l' >/dev/tty
+  }
+  trap cleanup_selector RETURN
+
+  term_lines="$(tput lines 2>/dev/null || printf '24')"
+  page_size="$((term_lines - 6))"
+  (( page_size < 8 )) && page_size=8
+
+  while (( cursor < ${#entries_ref[@]} )) && [[ "${entries_ref[$cursor]%%$'\t'*}" != "P" ]]; do
+    cursor="$((cursor + 1))"
+  done
+
+  printf '\033[?1049h\033[?25l' >/dev/tty
+  stty -echo -icanon time 0 min 1
+  while true; do
+    if (( cursor < offset )); then
+      offset="$cursor"
+    elif (( cursor >= offset + page_size )); then
+      offset="$((cursor - page_size + 1))"
+    fi
+
+    printf '\033[H\033[J' >/dev/tty
+    printf 'Package selection: arrows move, Space toggles, Enter confirms, q cancels.\n' >/dev/tty
+    printf 'Preset packages start selected. Categories are headers; package rows are selectable.\n\n' >/dev/tty
+
+    for ((i = offset; i < ${#entries_ref[@]} && i < offset + page_size; i++)); do
+      entry="${entries_ref[$i]}"
+      type="${entry%%$'\t'*}"
+      if [[ "$type" == "H" ]]; then
+        label="${entry#*$'\t'}"
+        printf '\033[1m%s\033[0m\n' "$label" >/dev/tty
+        continue
+      fi
+
+      label="${entry#*$'\t'}"
+      label="${label%%$'\t'*}"
+      item="${entry##*$'\t'}"
+      if [[ -n "${selected_map[$item]:-}" ]]; then
+        marker='[x]'
+      else
+        marker='[ ]'
+      fi
+      if (( i == cursor )); then
+        printf '\033[7m  %s %s\033[0m\n' "$marker" "$item" >/dev/tty
+      else
+        printf '  %s %s\n' "$marker" "$item" >/dev/tty
+      fi
+    done
+
+    IFS= read -rsn1 key </dev/tty || key=""
+    case "$key" in
+      $'\x1b')
+        IFS= read -rsn2 -t 0.01 key </dev/tty || key=""
+        case "$key" in
+          '[A')
+            while (( cursor > 0 )); do
+              cursor="$((cursor - 1))"
+              [[ "${entries_ref[$cursor]%%$'\t'*}" == "P" ]] && break
+            done
+            ;;
+          '[B')
+            while (( cursor < ${#entries_ref[@]} - 1 )); do
+              cursor="$((cursor + 1))"
+              [[ "${entries_ref[$cursor]%%$'\t'*}" == "P" ]] && break
+            done
+            ;;
+        esac
+        ;;
+      " ")
+        entry="${entries_ref[$cursor]}"
+        [[ "${entry%%$'\t'*}" == "P" ]] || continue
+        item="${entry##*$'\t'}"
+        if [[ -n "${selected_map[$item]:-}" ]]; then
+          unset 'selected_map[$item]'
+        else
+          selected_map["$item"]=1
+        fi
+        ;;
+      "")
+        break
+        ;;
+      q|Q)
+        return 1
+        ;;
+    esac
+  done
+
+  for entry in "${entries_ref[@]}"; do
+    [[ "${entry%%$'\t'*}" == "P" ]] || continue
+    item="${entry##*$'\t'}"
+    if [[ -n "${selected_map[$item]:-}" ]] && ! list_contains_csv "$selected_csv" "$item"; then
+      if [[ -z "$selected_csv" ]]; then
+        selected_csv="$item"
+      else
+        selected_csv="$selected_csv,$item"
+      fi
+    fi
+  done
+  printf '%s\n' "$selected_csv"
+}
+
+list_contains_csv() {
+  local list="$1"
+  local needle="$2"
+  local item
+  [[ -n "$list" ]] || return 1
+  IFS=',' read -r -a items <<< "$list"
+  for item in "${items[@]}"; do
+    [[ "$item" == "$needle" ]] && return 0
+  done
+  return 1
+}
+
+filter_items() {
+  local item
+  while IFS= read -r item; do
+    [[ -n "$item" ]] || continue
+    if [[ -n "$SELECTED_PACKAGES" ]] && ! list_contains_csv "$SELECTED_PACKAGES" "$item"; then
+      continue
+    fi
+    if list_contains_csv "$EXCLUDED_PACKAGES" "$item"; then
+      continue
+    fi
+    printf '%s\n' "$item"
+  done | awk '!seen[$0]++'
+}
+
+validate_package_filter() {
+  [[ -n "$SELECTED_PACKAGES" ]] || return 0
+
+  local source item all_items selected
+  all_items="$(all_package_items)"
+
+  IFS=',' read -r -a selected <<< "$SELECTED_PACKAGES"
+  for item in "${selected[@]}"; do
+    [[ -n "$item" ]] || continue
+    if ! grep -Fxq "$item" <<< "$all_items"; then
+      die "package '$item' is not in selected categories/host/distro manifests"
+    fi
+  done
 }
 
 install_pacman() {
@@ -529,11 +862,12 @@ configure_user() {
 install_selected_packages() {
   local official chaotic aur flatpaks
   local lizardbyte
-  mapfile -t official < <(collect_items official.md)
-  mapfile -t chaotic < <(collect_items chaotic-aur.md)
-  mapfile -t lizardbyte < <(collect_items lizardbyte.md)
-  mapfile -t aur < <(collect_items aur.md)
-  mapfile -t flatpaks < <(collect_items flatpak.txt)
+  validate_package_filter
+  mapfile -t official < <(collect_install_items official.md | filter_items)
+  mapfile -t chaotic < <(collect_install_items chaotic-aur.md | filter_items)
+  mapfile -t lizardbyte < <(collect_install_items lizardbyte.md | filter_items)
+  mapfile -t aur < <(collect_install_items aur.md | filter_items)
+  mapfile -t flatpaks < <(collect_install_items flatpak.txt | filter_items)
 
   setup_chaotic_aur "${chaotic[@]}"
   setup_lizardbyte_repo "${lizardbyte[@]}"
@@ -545,10 +879,13 @@ install_selected_packages() {
 print_summary() {
   log "Bootstrap summary"
   log "  distro:  $(distro_id)"
+  log "  preset:  $DISTRO"
   log "  host:    $HOST"
   log "  profile: $PROFILE"
   log "  session: ${SESSION:-none}"
-  log "  groups:  $SELECTED_GROUPS"
+  log "  categories: $SELECTED_CATEGORIES"
+  [[ -n "$SELECTED_PACKAGES" ]] && log "  packages:   $SELECTED_PACKAGES"
+  [[ -n "$EXCLUDED_PACKAGES" ]] && log "  excluded:   $EXCLUDED_PACKAGES"
   (( DRY_RUN )) && log "  mode:    dry-run"
 }
 
@@ -557,7 +894,7 @@ main() {
   resolve_defaults
 
   case "$(distro_id)" in
-    arch|cachyos|cachyos-lts)
+    arch|cachyos)
       ;;
     *)
       die "unsupported distro: $(distro_id). Expected Arch Linux or CachyOS."

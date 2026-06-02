@@ -166,7 +166,7 @@ require_arch() {
   # shellcheck disable=SC1091
   . /etc/os-release
   case "${ID:-}" in
-    arch|cachyos|cachyos-lts)
+    arch|cachyos)
       ;;
     *)
       die "unsupported distro: ${ID:-unknown}. Expected Arch Linux or CachyOS."

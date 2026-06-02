@@ -246,7 +246,8 @@ debug {
 }
 
 binds {
-    Mod+less { spawn "niri-scr"; }
+    Mod+less { spawn "screenshot-upload"; }
+    Mod+Shift+less { spawn "screenshot-clipboard"; }
 }
 
 // Override to disable super+tab

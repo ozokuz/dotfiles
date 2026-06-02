@@ -1,27 +1,29 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 url="$(cat ~/.local/upload_url.txt)"
 screenshot_path="$(xdg-user-dir PICTURES)/screenshot.png"
 last_screenshot_path="$(xdg-user-dir PICTURES)/last_screenshot.png"
 
-mv "$screenshot_path" "$last_screenshot_path"
+if [ -f "$screenshot_path" ]; then
+  mv "$screenshot_path" "$last_screenshot_path"
+fi
 
 if ! dms screenshot full --stdout | satty --filename - -o "$screenshot_path"; then
   notify-send "Screenshot" "Canceled"
   exit 1
 fi
 
-if [ -z "$screenshot_path" ]; then
+if [ ! -s "$screenshot_path" ]; then
   notify-send "Screenshot" "Canceled"
   exit 1
 fi
 
 if ! json="$(curl -X POST -F "file=@$screenshot_path" "$url" -o-)"; then
-  notify-send "Screenshot" "Upload Failed"
+  notify-send "Screenshot" "Upload failed"
   exit 1
 fi
 
 echo "$json" | jq -r '.attachments[0].url' | awk -F? '{print $1}' | wl-copy -n
 
-notify-send "Screenshot" "Screenshot url was copied to the clipboard!"
-
+notify-send "Screenshot" "Screenshot URL was copied to the clipboard."
