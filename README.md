@@ -39,7 +39,7 @@ Run with explicit host defaults:
 ```sh
 ./setup.sh --host saturn --session hyprland
 ./setup.sh --host titan --session niri --dry-run
-./setup.sh --host titan --session hyprland --groups desktop-common,apps,dev,hyprland --dry-run
+./setup.sh --host titan --session hyprland --categories desktop-common,apps,dev,hyprland --dry-run
 ```
 
 Install only specific packages from the selected package categories:

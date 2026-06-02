@@ -410,11 +410,22 @@ all_package_items() {
   done | awk '!seen[$0]++' | sort
 }
 
-package_label_for_file() {
+package_category_for_file() {
+  local file="$1"
+  local rel="${file#$PACKAGE_DIR/}"
+  local dir="${rel%/*}"
+
+  case "$dir" in
+    groups/*) dir="${dir#groups/}" ;;
+  esac
+
+  printf '%s\n' "$dir"
+}
+
+package_source_for_file() {
   local file="$1"
   local rel="${file#$PACKAGE_DIR/}"
   local source="${rel##*/}"
-  local dir="${rel%/*}"
 
   case "$source" in
     official.md) source="official" ;;
@@ -424,31 +435,32 @@ package_label_for_file() {
     flatpak.txt) source="flatpak" ;;
   esac
 
-  printf '%s/%s\n' "$dir" "$source"
+  printf '%s\n' "$source"
 }
 
 all_package_entries() {
-  local source file label
+  local source file category package_source
   for source in official.md chaotic-aur.md lizardbyte.md aur.md flatpak.txt; do
     find "$PACKAGE_DIR/common" "$PACKAGE_DIR/groups" "$PACKAGE_DIR/distros" -mindepth 1 -maxdepth 4 -type f -name "$source" -print0 2>/dev/null |
       while IFS= read -r -d '' file; do
-        label="$(package_label_for_file "$file")"
-        clean_manifest "$file" | awk -v label="$label" 'NF { print label "\t" $0 }'
+        category="$(package_category_for_file "$file")"
+        package_source="$(package_source_for_file "$file")"
+        clean_manifest "$file" | awk -v category="$category" -v package_source="$package_source" 'NF { print category "\t" package_source "\t" $0 }'
       done
-  done | sort -t $'\t' -k1,1 -k2,2 |
+  done | sort -t $'\t' -k1,1 -k3,3 -k2,2 |
     awk -F '\t' '
       $1 != current {
         current = $1
         print "H\t" current
       }
-      { print "P\t" $1 "\t" $2 }
+      { print "P\t" $1 "\t" $2 "\t" $3 }
     '
 }
 
 package_selector_tui() {
   local -n entries_ref="$1"
   local initial_selected="$2"
-  local cursor=0 offset=0 page_size=18 key entry type label item i marker selected_csv
+  local cursor=0 offset=0 page_size=18 key entry type label package_source item i marker selected_csv
   local term_lines
   declare -A selected_map=()
 
@@ -481,7 +493,7 @@ package_selector_tui() {
 
     printf '\033[H\033[J' >/dev/tty
     printf 'Package selection: arrows move, Space toggles, Enter confirms, q cancels.\n' >/dev/tty
-    printf 'Preset packages start selected. Categories are headers; package rows are selectable.\n\n' >/dev/tty
+    printf 'Preset packages start selected. Headers group packages by category.\n\n' >/dev/tty
 
     for ((i = offset; i < ${#entries_ref[@]} && i < offset + page_size; i++)); do
       entry="${entries_ref[$i]}"
@@ -492,18 +504,16 @@ package_selector_tui() {
         continue
       fi
 
-      label="${entry#*$'\t'}"
-      label="${label%%$'\t'*}"
-      item="${entry##*$'\t'}"
+      IFS=$'\t' read -r type label package_source item <<< "$entry"
       if [[ -n "${selected_map[$item]:-}" ]]; then
         marker='[x]'
       else
         marker='[ ]'
       fi
       if (( i == cursor )); then
-        printf '\033[7m  %s %s\033[0m\n' "$marker" "$item" >/dev/tty
+        printf '\033[7m  %s %s (%s)\033[0m\n' "$marker" "$item" "$package_source" >/dev/tty
       else
-        printf '  %s %s\n' "$marker" "$item" >/dev/tty
+        printf '  %s %s (%s)\n' "$marker" "$item" "$package_source" >/dev/tty
       fi
     done
 
