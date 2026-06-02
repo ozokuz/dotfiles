@@ -19,6 +19,24 @@ PRESET_PACKAGES=""
 PROFILE="workstation"
 BACKUP_DIR=""
 
+if [[ -t 1 ]]; then
+  C_RESET=$'\033[0m'
+  C_BOLD=$'\033[1m'
+  C_DIM=$'\033[2m'
+  C_RED=$'\033[31m'
+  C_GREEN=$'\033[32m'
+  C_YELLOW=$'\033[33m'
+  C_CYAN=$'\033[36m'
+else
+  C_RESET=""
+  C_BOLD=""
+  C_DIM=""
+  C_RED=""
+  C_GREEN=""
+  C_YELLOW=""
+  C_CYAN=""
+fi
+
 usage() {
   cat <<'EOF'
 Usage: ./setup.sh [options]
@@ -48,14 +66,30 @@ log() {
   printf '%s\n' "$*"
 }
 
+info() {
+  printf '%s%s%s\n' "$C_CYAN" "$*" "$C_RESET"
+}
+
+success() {
+  printf '%s%s%s\n' "$C_GREEN" "$*" "$C_RESET"
+}
+
+warn() {
+  printf '%s%s%s\n' "$C_YELLOW" "$*" "$C_RESET"
+}
+
+dry_log() {
+  printf '%s%s%s\n' "$C_DIM" "$*" "$C_RESET"
+}
+
 die() {
-  printf 'error: %s\n' "$*" >&2
+  printf '%serror:%s %s\n' "$C_RED" "$C_RESET" "$*" >&2
   exit 1
 }
 
 run() {
   if (( DRY_RUN )); then
-    printf '[dry-run] %q' "$1"
+    printf '%s[dry-run]%s %q' "$C_DIM" "$C_RESET" "$1"
     shift || true
     printf ' %q' "$@"
     printf '\n'
@@ -66,7 +100,7 @@ run() {
 
 run_shell() {
   if (( DRY_RUN )); then
-    printf '[dry-run] %s\n' "$*"
+    printf '%s[dry-run]%s %s\n' "$C_DIM" "$C_RESET" "$*"
   else
     bash -c "$*"
   fi
@@ -75,7 +109,8 @@ run_shell() {
 confirm() {
   local prompt="$1"
   (( ASSUME_YES )) && return 0
-  read -r -p "$prompt [y/N] " answer
+  printf '%s%s%s %s[y/N]%s ' "$C_BOLD" "$prompt" "$C_RESET" "$C_DIM" "$C_RESET"
+  read -r answer
   [[ "$answer" == "y" || "$answer" == "Y" || "$answer" == "yes" || "$answer" == "YES" ]]
 }
 
@@ -155,7 +190,8 @@ prompt_default() {
   local default="$3"
   local value
 
-  read -r -p "$prompt [$default]: " value
+  printf '%s%s%s %s[%s]%s: ' "$C_BOLD" "$prompt" "$C_RESET" "$C_DIM" "$default" "$C_RESET"
+  read -r value
   printf -v "$var_name" '%s' "${value:-$default}"
 }
 
@@ -460,9 +496,21 @@ all_package_entries() {
 package_selector_tui() {
   local -n entries_ref="$1"
   local initial_selected="$2"
-  local cursor=0 offset=0 page_size=18 key entry type label package_source item i marker selected_csv
+  local cursor=0 offset=0 page_size=18 key entry type label package_source item i marker selected_csv source_color
   local term_lines
+  local reset bold dim cyan green yellow blue magenta red inverse
   declare -A selected_map=()
+
+  reset=$'\033[0m'
+  bold=$'\033[1m'
+  dim=$'\033[2m'
+  cyan=$'\033[36m'
+  green=$'\033[32m'
+  yellow=$'\033[33m'
+  blue=$'\033[34m'
+  magenta=$'\033[35m'
+  red=$'\033[31m'
+  inverse=$'\033[7m'
 
   while IFS= read -r item; do
     [[ -n "$item" ]] && selected_map["$item"]=1
@@ -492,28 +540,41 @@ package_selector_tui() {
     fi
 
     printf '\033[H\033[J' >/dev/tty
-    printf 'Package selection: arrows move, Space toggles, Enter confirms, q cancels.\n' >/dev/tty
-    printf 'Preset packages start selected. Headers group packages by category.\n\n' >/dev/tty
+    printf '%sPackage selection%s: arrows move, %sSpace%s toggles, %sEnter%s confirms, %sq%s cancels.\n' "$bold" "$reset" "$yellow" "$reset" "$green" "$reset" "$red" "$reset" >/dev/tty
+    printf '%sPreset packages start selected. Headers group packages by category.%s\n\n' "$dim" "$reset" >/dev/tty
 
     for ((i = offset; i < ${#entries_ref[@]} && i < offset + page_size; i++)); do
       entry="${entries_ref[$i]}"
       type="${entry%%$'\t'*}"
       if [[ "$type" == "H" ]]; then
         label="${entry#*$'\t'}"
-        printf '\033[1m%s\033[0m\n' "$label" >/dev/tty
+        printf '%s%s%s\n' "$bold$cyan" "$label" "$reset" >/dev/tty
         continue
       fi
 
       IFS=$'\t' read -r type label package_source item <<< "$entry"
+      case "$package_source" in
+        official) source_color="$blue" ;;
+        chaotic) source_color="$magenta" ;;
+        lizardbyte) source_color="$cyan" ;;
+        aur) source_color="$yellow" ;;
+        flatpak) source_color="$green" ;;
+        *) source_color="$dim" ;;
+      esac
       if [[ -n "${selected_map[$item]:-}" ]]; then
-        marker='[x]'
+        marker="${green}[x]${reset}"
       else
-        marker='[ ]'
+        marker="${dim}[ ]${reset}"
       fi
       if (( i == cursor )); then
-        printf '\033[7m  %s %s (%s)\033[0m\n' "$marker" "$item" "$package_source" >/dev/tty
+        if [[ -n "${selected_map[$item]:-}" ]]; then
+          marker='[x]'
+        else
+          marker='[ ]'
+        fi
+        printf '%s  %s %s (%s)%s\n' "$inverse" "$marker" "$item" "$package_source" "$reset" >/dev/tty
       else
-        printf '  %s %s (%s)\n' "$marker" "$item" "$package_source" >/dev/tty
+        printf '  %b %s %s(%s)%s\n' "$marker" "$item" "$source_color" "$package_source" "$reset" >/dev/tty
       fi
     done
 
@@ -616,9 +677,9 @@ install_pacman() {
   local pkgs=("$@")
   ((${#pkgs[@]})) || return 0
 
-  log "Installing $label packages: ${pkgs[*]}"
+  info "Installing $label packages: ${pkgs[*]}"
   if (( DRY_RUN )); then
-    printf '[dry-run] sudo pacman -S --needed'
+    printf '%s[dry-run]%s sudo pacman -S --needed' "$C_DIM" "$C_RESET"
     printf ' %q' "${pkgs[@]}"
     printf '\n'
   else
@@ -641,9 +702,9 @@ install_aur() {
     die "AUR packages requested but neither paru nor yay is installed"
   fi
 
-  log "Installing AUR packages with $helper: ${pkgs[*]}"
+  info "Installing AUR packages with $helper: ${pkgs[*]}"
   if (( DRY_RUN )); then
-    printf '[dry-run] %q -S --needed' "$helper"
+    printf '%s[dry-run]%s %q -S --needed' "$C_DIM" "$C_RESET" "$helper"
     printf ' %q' "${pkgs[@]}"
     printf '\n'
   else
@@ -656,15 +717,15 @@ setup_chaotic_aur() {
   ((${#chaotic_pkgs[@]})) || return 0
 
   if grep -Eq '^\[chaotic-aur\]' /etc/pacman.conf 2>/dev/null; then
-    log "Chaotic-AUR repository is already configured."
+    success "Chaotic-AUR repository is already configured."
     return 0
   fi
 
-  log "Chaotic-AUR packages are selected, but the repository is not configured."
-  log "This setup will install chaotic-keyring and chaotic-mirrorlist, then add the pacman repo block."
+  warn "Chaotic-AUR packages are selected, but the repository is not configured."
+  info "This setup will install chaotic-keyring and chaotic-mirrorlist, then add the pacman repo block."
 
   if (( DRY_RUN )); then
-    log "[dry-run] configure Chaotic-AUR repository in /etc/pacman.conf"
+    dry_log "[dry-run] configure Chaotic-AUR repository in /etc/pacman.conf"
     return 0
   fi
 
@@ -684,15 +745,15 @@ setup_lizardbyte_repo() {
   ((${#lizardbyte_pkgs[@]})) || return 0
 
   if grep -Eq '^\[lizardbyte\]' /etc/pacman.conf 2>/dev/null; then
-    log "LizardByte repository is already configured."
+    success "LizardByte repository is already configured."
     return 0
   fi
 
-  log "LizardByte packages are selected, but the repository is not configured."
-  log "This setup will add the LizardByte pacman repository for Sunshine."
+  warn "LizardByte packages are selected, but the repository is not configured."
+  info "This setup will add the LizardByte pacman repository for Sunshine."
 
   if (( DRY_RUN )); then
-    log "[dry-run] configure LizardByte repository in /etc/pacman.conf"
+    dry_log "[dry-run] configure LizardByte repository in /etc/pacman.conf"
     return 0
   fi
 
@@ -712,16 +773,16 @@ setup_flatpak() {
     sudo pacman -S --needed flatpak
   fi
 
-  log "Ensuring Flathub remote exists."
+  info "Ensuring Flathub remote exists."
   if (( DRY_RUN )); then
-    log "[dry-run] flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo"
+    dry_log "[dry-run] flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo"
   else
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
   fi
 
-  log "Installing Flatpak apps: ${apps[*]}"
+  info "Installing Flatpak apps: ${apps[*]}"
   if (( DRY_RUN )); then
-    printf '[dry-run] flatpak install -y --or-update flathub'
+    printf '%s[dry-run]%s flatpak install -y --or-update flathub' "$C_DIM" "$C_RESET"
     printf ' %q' "${apps[@]}"
     printf '\n'
   else
@@ -753,10 +814,10 @@ prepare_stow_conflicts() {
 
       ensure_backup_dir
       backup="$(backup_path_for "$target")"
-      log "Backing up existing $target to $backup"
+      warn "Backing up existing $target to $backup"
       if (( DRY_RUN )); then
-        log "[dry-run] mkdir -p $(dirname "$backup")"
-        log "[dry-run] mv $target $backup"
+        dry_log "[dry-run] mkdir -p $(dirname "$backup")"
+        dry_log "[dry-run] mv $target $backup"
       else
         mkdir -p "$(dirname "$backup")"
         mv "$target" "$backup"
@@ -768,9 +829,9 @@ prepare_stow_conflicts() {
 stow_dotfiles() {
   command -v stow >/dev/null 2>&1 || (( DRY_RUN )) || sudo pacman -S --needed stow
   prepare_stow_conflicts
-  log "Stowing dotfiles from $DOTS_DIR into $HOME"
+  info "Stowing dotfiles from $DOTS_DIR into $HOME"
   if (( DRY_RUN )); then
-    log "[dry-run] stow -t $HOME -d $DOTS_DIR ."
+    dry_log "[dry-run] stow -t $HOME -d $DOTS_DIR ."
   else
     stow -t "$HOME" -d "$DOTS_DIR" .
   fi
@@ -785,7 +846,7 @@ link_host_file() {
 
   [[ -e "$source_file" || -L "$source_file" ]] || return 0
 
-  log "Selecting $label overlay: $HOST"
+  info "Selecting $label overlay: $HOST"
   if [[ -e "$target_file" || -L "$target_file" ]]; then
     if [[ -L "$target_file" && "$(readlink "$target_file")" == "$link_target" ]]; then
       return 0
@@ -793,10 +854,10 @@ link_host_file() {
 
     ensure_backup_dir
     backup="$(backup_path_for "$target_file")"
-    log "Backing up existing $target_file to $backup"
+    warn "Backing up existing $target_file to $backup"
     if (( DRY_RUN )); then
-      log "[dry-run] mkdir -p $(dirname "$backup")"
-      log "[dry-run] mv $target_file $backup"
+      dry_log "[dry-run] mkdir -p $(dirname "$backup")"
+      dry_log "[dry-run] mv $target_file $backup"
     else
       mkdir -p "$(dirname "$backup")"
       mv "$target_file" "$backup"
@@ -804,8 +865,8 @@ link_host_file() {
   fi
 
   if (( DRY_RUN )); then
-    log "[dry-run] mkdir -p $(dirname "$target_file")"
-    log "[dry-run] ln -s $link_target $target_file"
+    dry_log "[dry-run] mkdir -p $(dirname "$target_file")"
+    dry_log "[dry-run] ln -s $link_target $target_file"
   else
     mkdir -p "$(dirname "$target_file")"
     ln -s "$link_target" "$target_file"
@@ -850,9 +911,9 @@ enable_services() {
 
   local service
   for service in "${services[@]}"; do
-    log "Enabling service: $service"
+    info "Enabling service: $service"
     if (( DRY_RUN )); then
-      log "[dry-run] sudo systemctl enable --now $service"
+      dry_log "[dry-run] sudo systemctl enable --now $service"
     else
       sudo systemctl enable --now "$service"
     fi
@@ -867,9 +928,9 @@ configure_user() {
   contains_group gaming && groups+=(input)
 
   if ((${#groups[@]})); then
-    log "Adding $user to groups: ${groups[*]}"
+    info "Adding $user to groups: ${groups[*]}"
     if (( DRY_RUN )); then
-      printf '[dry-run] sudo usermod -aG %q %q\n' "$(IFS=,; printf '%s' "${groups[*]}")" "$user"
+      printf '%s[dry-run]%s sudo usermod -aG %q %q\n' "$C_DIM" "$C_RESET" "$(IFS=,; printf '%s' "${groups[*]}")" "$user"
     else
       sudo usermod -aG "$(IFS=,; printf '%s' "${groups[*]}")" "$user"
     fi
@@ -879,9 +940,9 @@ configure_user() {
     local zsh_path
     zsh_path="$(command -v zsh || printf '/usr/bin/zsh')"
     if [[ "${SHELL:-}" != "$zsh_path" ]]; then
-      log "Setting default shell for $user to $zsh_path"
+      info "Setting default shell for $user to $zsh_path"
       if (( DRY_RUN )); then
-        log "[dry-run] chsh -s $zsh_path $user"
+        dry_log "[dry-run] chsh -s $zsh_path $user"
       else
         chsh -s "$zsh_path" "$user"
       fi
@@ -907,16 +968,16 @@ install_selected_packages() {
 }
 
 print_summary() {
-  log "Bootstrap summary"
-  log "  distro:  $(distro_id)"
-  log "  preset:  $DISTRO"
-  log "  host:    $HOST"
-  log "  profile: $PROFILE"
-  log "  session: ${SESSION:-none}"
-  log "  categories: $SELECTED_CATEGORIES"
-  [[ -n "$SELECTED_PACKAGES" ]] && log "  packages:   $SELECTED_PACKAGES"
-  [[ -n "$EXCLUDED_PACKAGES" ]] && log "  excluded:   $EXCLUDED_PACKAGES"
-  (( DRY_RUN )) && log "  mode:    dry-run"
+  printf '%sBootstrap summary%s\n' "$C_BOLD$C_CYAN" "$C_RESET"
+  printf '  %sdistro:%s     %s\n' "$C_DIM" "$C_RESET" "$(distro_id)"
+  printf '  %spreset:%s     %s\n' "$C_DIM" "$C_RESET" "$DISTRO"
+  printf '  %shost:%s       %s\n' "$C_DIM" "$C_RESET" "$HOST"
+  printf '  %sprofile:%s    %s\n' "$C_DIM" "$C_RESET" "$PROFILE"
+  printf '  %ssession:%s    %s\n' "$C_DIM" "$C_RESET" "${SESSION:-none}"
+  printf '  %scategories:%s %s\n' "$C_DIM" "$C_RESET" "$SELECTED_CATEGORIES"
+  [[ -n "$SELECTED_PACKAGES" ]] && printf '  %spackages:%s   %s\n' "$C_DIM" "$C_RESET" "$SELECTED_PACKAGES"
+  [[ -n "$EXCLUDED_PACKAGES" ]] && printf '  %sexcluded:%s   %s\n' "$C_DIM" "$C_RESET" "$EXCLUDED_PACKAGES"
+  (( DRY_RUN )) && printf '  %smode:%s       %sdry-run%s\n' "$C_DIM" "$C_RESET" "$C_YELLOW" "$C_RESET"
 }
 
 main() {
@@ -943,8 +1004,8 @@ main() {
   configure_user
   enable_services
 
-  log "Setup complete."
-  log "Follow up manually for secrets/auth: gh auth login, tailscale up, Bitwarden login, SSH keys."
+  success "Setup complete."
+  warn "Follow up manually for secrets/auth: gh auth login, tailscale up, Bitwarden login, SSH keys."
 }
 
 main "$@"
