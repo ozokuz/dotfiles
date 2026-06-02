@@ -5,13 +5,12 @@
 - cliphist
 - ffmpegthumbnailer
 - file-roller
-- ghostty
-- gimp
 - greetd
 - grim
 - gvfs-mtp
 - imv
 - kvantum
+- lan-mouse
 - libnotify
 - matugen
 - mpv
@@ -33,6 +32,7 @@
 - ttf-jetbrains-mono-nerd
 - uwsm
 - wev
+- wiremix
 - wl-clipboard
 - xclip
 - xdg-desktop-portal-gtk

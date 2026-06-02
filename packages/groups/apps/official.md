@@ -2,10 +2,10 @@
 - bitwarden
 - discord
 - evince
+- gimp
 - kdenlive
 - kdeconnect
 - krita
-- lan-mouse
 - libresprite
 - localsend
 - moonlight-qt
@@ -16,5 +16,4 @@
 - scrcpy
 - spotify-launcher
 - telegram-desktop
-- wiremix
 - zotero

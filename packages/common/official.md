@@ -26,6 +26,7 @@
 - gdu
 - git-delta
 - github-cli
+- ghostty
 - jless
 - jq
 - lazydocker
