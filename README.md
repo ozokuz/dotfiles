@@ -59,7 +59,7 @@ without opening the selector.
 
 - `setup.sh` is the main entrypoint.
 - `packages/common` contains packages shared by all machines.
-- `packages/groups` contains selectable package categories such as `dev`, `gaming`, `virtualization`, `hyprland`, and `niri`. Categories can have subcategories, for example `hardware/nvidia-gpu`, `hardware/bluetooth`, and `gaming/flatpak`; selecting a parent category includes package manifests in its nested subcategories.
+- `packages/groups` contains selectable package categories such as `dev`, `gaming`, `virtualization`, `security`, `hyprland`, and `niri`. Categories can have subcategories, for example `hardware/nvidia-gpu`, `hardware/bluetooth`, `gaming/flatpak`, and `security/firewall`; selecting a parent category includes package manifests in its nested subcategories.
 - `packages/hosts` contains host presets such as `saturn` and `titan`.
   Host presets choose default categories and package selections; package
   definitions live in common, group, and distro lists. Use `PACKAGES` for
@@ -83,7 +83,7 @@ without opening the selector.
 The default `saturn` setup selects:
 
 ```text
-desktop-common,apps,dev,gaming,virtualization,gaming/flatpak,hardware/nvidia-gpu,hardware/power-profiles,hyprland
+desktop-common,apps,dev,gaming,virtualization,gaming/flatpak,hardware/nvidia-gpu,hardware/power-profiles,security/firewall,hyprland
 ```
 
 The default `titan` setup selects:
