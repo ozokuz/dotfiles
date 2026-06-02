@@ -180,6 +180,11 @@ normalize_group_list() {
   printf '%s\n' "$raw"
 }
 
+uppercase() {
+  local value="$1"
+  printf '%s\n' "${value^^}"
+}
+
 contains_group() {
   local needle="$1"
   local item
@@ -209,7 +214,7 @@ load_preset_value() {
 
 resolve_defaults() {
   local detected_host
-  local host_preset distro_preset preset_session preset_categories preset_packages distro_categories
+  local host_preset distro_preset preset_session preset_categories preset_packages distro_preset_packages distro_categories distro_package_key distro_host_packages
   detected_host="$(host_name)"
   [[ -n "$DISTRO" ]] || DISTRO="$(distro_id)"
 
@@ -238,8 +243,11 @@ resolve_defaults() {
   preset_session="$(load_preset_value "$host_preset" SESSION)"
   preset_categories="$(load_preset_value "$host_preset" CATEGORIES)"
   preset_packages="$(load_preset_value "$host_preset" PACKAGES)"
+  distro_package_key="$(uppercase "$DISTRO")_PACKAGES"
+  distro_host_packages="$(load_preset_value "$host_preset" "$distro_package_key")"
   distro_categories="$(load_preset_value "$distro_preset" CATEGORIES)"
-  PRESET_PACKAGES="$(normalize_group_list "$preset_packages")"
+  distro_preset_packages="$(load_preset_value "$distro_preset" PACKAGES)"
+  PRESET_PACKAGES="$(normalize_group_list "$preset_packages,$distro_preset_packages,$distro_host_packages")"
 
   [[ -n "$SESSION" ]] || SESSION="${preset_session:-hyprland}"
   [[ -n "$SELECTED_CATEGORIES" ]] || SELECTED_CATEGORIES="${preset_categories:-desktop-common,apps,dev}"

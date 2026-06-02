@@ -63,7 +63,10 @@ selection prompt to skip the selector and install the full selected preset.
 - `packages/groups` contains selectable package categories such as `dev`, `gaming`, `virtualization`, `hyprland`, `niri`, and `flatpak-gaming`.
 - `packages/hosts` contains host presets such as `saturn` and `titan`.
   Host presets choose default categories and package selections; package
-  definitions live in common, group, and distro lists.
+  definitions live in common, group, and distro lists. Use `PACKAGES` for
+  host packages that apply to every distro preset, or distro-specific keys
+  such as `ARCH_PACKAGES` for packages that should only be selected on one
+  distro.
 - `packages/distros` contains distro presets and overlays such as `arch` and `cachyos`.
 - `dots` is managed with GNU Stow and currently owns curated shell dotfiles.
 - `host-overlays/<host>` contains machine-specific dotfiles that should not be
