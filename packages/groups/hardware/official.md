@@ -4,7 +4,9 @@
 
 ## GPU Drivers
 - intel-media-driver
+- lib32-nvidia-utils
 - lib32-vulkan-intel
+- libvdpau
 - libva-nvidia-driver
 - nvidia-open
 - nvidia-prime

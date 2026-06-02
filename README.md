@@ -50,11 +50,10 @@ Install only specific packages from the selected package categories:
 ./setup.sh --host titan --distro cachyos --packages ghostty --dry-run
 ```
 
-When run interactively, package selection opens a multi-select menu with preset
-packages preselected. The menu shows packages from every repo category, host,
-and distro list so presets are only starting points. Use arrow keys to move,
-Space to toggle packages, and Enter to confirm. Enter `all` at the package
-selection prompt to skip the selector and install the full selected preset.
+When run interactively, package categories use the selected host and distro
+defaults without an extra prompt. Package selection opens directly with preset
+packages preselected; pass `--packages` to install only specific packages
+without opening the selector.
 
 ## Model
 

@@ -257,7 +257,6 @@ resolve_defaults() {
 
   if (( ! ASSUME_YES )); then
     prompt_default SESSION "Desktop session (hyprland/niri)" "$SESSION"
-    prompt_default SELECTED_CATEGORIES "Package categories" "$SELECTED_CATEGORIES"
   fi
 
   SELECTED_CATEGORIES="$(normalize_group_list "$SELECTED_CATEGORIES")"
@@ -276,19 +275,8 @@ resolve_defaults() {
   esac
 
   if (( ! ASSUME_YES )) && [[ -z "$SELECTED_PACKAGES" ]]; then
-    local package_mode=""
-    prompt_default package_mode "Package selection (select/all)" "select"
-    case "$package_mode" in
-      all|"")
-        ;;
-      select)
-        prompt_package_selection
-        SELECTED_PACKAGES="$(normalize_group_list "$SELECTED_PACKAGES")"
-        ;;
-      *)
-        SELECTED_PACKAGES="$(normalize_group_list "$package_mode")"
-        ;;
-    esac
+    prompt_package_selection
+    SELECTED_PACKAGES="$(normalize_group_list "$SELECTED_PACKAGES")"
   fi
 }
 
