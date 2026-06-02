@@ -38,7 +38,7 @@ Options:
 
 Examples:
   ./setup.sh --dry-run
-  ./setup.sh --host saturn --session hyprland --categories desktop-common,apps,dev,gaming,virtualization,flatpak-gaming
+  ./setup.sh --host saturn --session hyprland --categories desktop-common,apps,dev,gaming,virtualization,gaming/flatpak,hardware/nvidia-gpu
   ./setup.sh --host titan --session niri --dry-run
   ./setup.sh --host titan --packages ghostty,neovim,bitwarden --dry-run
 EOF
@@ -177,6 +177,7 @@ normalize_group_list() {
   local raw="$1"
   raw="${raw// /}"
   raw="${raw//;/,}"
+  raw="${raw//\/\//\/}"
   printf '%s\n' "$raw"
 }
 
@@ -195,8 +196,28 @@ contains_group() {
   return 1
 }
 
+validate_group_name() {
+  local group="$1"
+  [[ -n "$group" ]] || return 0
+  [[ "$group" != /* ]] || die "invalid category '$group': absolute paths are not allowed"
+  [[ "$group" != */ ]] || die "invalid category '$group': trailing slashes are not allowed"
+  [[ "$group" != *"/../"* && "$group" != "../"* && "$group" != *"/.." && "$group" != ".." ]] ||
+    die "invalid category '$group': parent directory references are not allowed"
+}
+
+validate_group_list() {
+  local list="$1"
+  local group
+  [[ -n "$list" ]] || return 0
+  IFS=',' read -r -a items <<< "$list"
+  for group in "${items[@]}"; do
+    validate_group_name "$group"
+  done
+}
+
 append_group_once() {
   local group="$1"
+  validate_group_name "$group"
   contains_group "$group" && return 0
   if [[ -z "$SELECTED_CATEGORIES" ]]; then
     SELECTED_CATEGORIES="$group"
@@ -262,6 +283,7 @@ resolve_defaults() {
   SELECTED_CATEGORIES="$(normalize_group_list "$SELECTED_CATEGORIES")"
   SELECTED_PACKAGES="$(normalize_group_list "$SELECTED_PACKAGES")"
   EXCLUDED_PACKAGES="$(normalize_group_list "$EXCLUDED_PACKAGES")"
+  validate_group_list "$SELECTED_CATEGORIES"
 
   case "$SESSION" in
     hyprland|niri)
@@ -302,7 +324,9 @@ manifest_files_for_source() {
 
   IFS=',' read -r -a group_items <<< "$SELECTED_CATEGORIES"
   for group in "${group_items[@]}"; do
-    [[ -f "$PACKAGE_DIR/groups/$group/$source" ]] && printf '%s\n' "$PACKAGE_DIR/groups/$group/$source"
+    validate_group_name "$group"
+    [[ -d "$PACKAGE_DIR/groups/$group" ]] || continue
+    find "$PACKAGE_DIR/groups/$group" -mindepth 1 -maxdepth 4 -type f -name "$source" -print 2>/dev/null | sort
   done
 
 }

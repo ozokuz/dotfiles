@@ -59,7 +59,7 @@ without opening the selector.
 
 - `setup.sh` is the main entrypoint.
 - `packages/common` contains packages shared by all machines.
-- `packages/groups` contains selectable package categories such as `dev`, `gaming`, `virtualization`, `hyprland`, `niri`, and `flatpak-gaming`.
+- `packages/groups` contains selectable package categories such as `dev`, `gaming`, `virtualization`, `hyprland`, and `niri`. Categories can have subcategories, for example `hardware/nvidia-gpu`, `hardware/bluetooth`, and `gaming/flatpak`; selecting a parent category includes package manifests in its nested subcategories.
 - `packages/hosts` contains host presets such as `saturn` and `titan`.
   Host presets choose default categories and package selections; package
   definitions live in common, group, and distro lists. Use `PACKAGES` for
@@ -83,13 +83,13 @@ without opening the selector.
 The default `saturn` setup selects:
 
 ```text
-desktop-common,apps,dev,gaming,virtualization,flatpak-gaming,hyprland
+desktop-common,apps,dev,gaming,virtualization,gaming/flatpak,hardware/nvidia-gpu,hardware/power-profiles,hyprland
 ```
 
 The default `titan` setup selects:
 
 ```text
-desktop-common,apps,dev,niri
+desktop-common,apps,dev,hardware/nvidia-gpu,hardware/intel-gpu,hardware/bluetooth,hardware/laptop,niri
 ```
 
 `titan` is the laptop profile. It stays lean by default and can opt into larger

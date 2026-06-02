@@ -5,6 +5,7 @@
 - flatpak
 - git
 - git-lfs
+- keyd
 - openssh
 - rsync
 - stow
