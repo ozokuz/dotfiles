@@ -56,7 +56,7 @@ Options:
 
 Examples:
   ./setup.sh --dry-run
-  ./setup.sh --host saturn --session hyprland --categories desktop-common,apps,dev,gaming,virtualization,gaming/flatpak,hardware/nvidia-gpu
+  ./setup.sh --host saturn --session hyprland --categories common,shell,cli-tools,sources,desktop-common,apps,dev,ai,gaming,virtualization,gaming/flatpak,hardware/nvidia-gpu
   ./setup.sh --host titan --session niri --dry-run
   ./setup.sh --host titan --packages ghostty,neovim,bitwarden --dry-run
 EOF
@@ -307,7 +307,7 @@ resolve_defaults() {
   PRESET_PACKAGES="$(normalize_group_list "$preset_packages,$distro_preset_packages,$distro_host_packages")"
 
   [[ -n "$SESSION" ]] || SESSION="${preset_session:-hyprland}"
-  [[ -n "$SELECTED_CATEGORIES" ]] || SELECTED_CATEGORIES="${preset_categories:-desktop-common,apps,dev}"
+  [[ -n "$SELECTED_CATEGORIES" ]] || SELECTED_CATEGORIES="${preset_categories:-common,shell,cli-tools,sources,desktop-common,apps,dev,ai}"
   if [[ -n "$distro_categories" ]]; then
     SELECTED_CATEGORIES="$(normalize_group_list "$SELECTED_CATEGORIES,$distro_categories")"
   fi

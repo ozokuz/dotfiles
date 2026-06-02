@@ -39,7 +39,7 @@ Run with explicit host defaults:
 ```sh
 ./setup.sh --host saturn --session hyprland
 ./setup.sh --host titan --session niri --dry-run
-./setup.sh --host titan --session hyprland --categories desktop-common,apps,dev,hyprland --dry-run
+./setup.sh --host titan --session hyprland --categories common,shell,cli-tools,sources,desktop-common,apps,dev,ai,hyprland --dry-run
 ```
 
 Install only specific packages from the selected package categories:
@@ -58,11 +58,10 @@ without opening the selector.
 ## Model
 
 - `setup.sh` is the main entrypoint.
-- `packages/common` contains packages shared by all machines.
-- `packages/groups` contains selectable package categories such as `dev`, `gaming`, `virtualization`, `security`, `hyprland`, and `niri`. Categories can have subcategories, for example `hardware/nvidia-gpu`, `hardware/bluetooth`, `gaming/flatpak`, and `security/firewall`; selecting a parent category includes package manifests in its nested subcategories.
+- `packages/groups` contains selectable package categories. Foundational categories now live here too, including `common`, `shell`, `cli-tools`, `sources`, and `ai`, alongside categories such as `dev`, `gaming`, `virtualization`, `security`, `hyprland`, and `niri`. Categories can have subcategories, for example `hardware/nvidia-gpu`, `hardware/bluetooth`, `gaming/flatpak`, and `security/firewall`; selecting a parent category includes package manifests in its nested subcategories.
 - `packages/hosts` contains host presets such as `saturn` and `titan`.
   Host presets choose default categories and package selections; package
-  definitions live in common, group, and distro lists. Use `PACKAGES` for
+  definitions live in group and distro lists. Use `PACKAGES` for
   host packages that apply to every distro preset, or distro-specific keys
   such as `ARCH_PACKAGES` for packages that should only be selected on one
   distro.
@@ -83,13 +82,13 @@ without opening the selector.
 The default `saturn` setup selects:
 
 ```text
-desktop-common,apps,dev,gaming,virtualization,gaming/flatpak,hardware/nvidia-gpu,hardware/power-profiles,security/firewall,hyprland
+common,shell,cli-tools,sources,desktop-common,apps,dev,ai,gaming,virtualization,gaming/flatpak,hardware/nvidia-gpu,hardware/power-profiles,security/firewall,hyprland
 ```
 
 The default `titan` setup selects:
 
 ```text
-desktop-common,apps,dev,hardware/nvidia-gpu,hardware/intel-gpu,hardware/bluetooth,hardware/laptop,niri
+common,shell,cli-tools,sources,desktop-common,apps,dev,ai,hardware/nvidia-gpu,hardware/intel-gpu,hardware/bluetooth,hardware/laptop,niri
 ```
 
 `titan` is the laptop profile. It stays lean by default and can opt into larger

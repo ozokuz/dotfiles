@@ -1,0 +1,13 @@
+## Common
+- base-devel
+- curl
+- distrobox
+- git
+- git-lfs
+- keyd
+- openssh
+- rsync
+- stow
+- sudo
+- tailscale
+- wget
