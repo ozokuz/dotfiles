@@ -1,3 +1,0 @@
-## Firewall
-- iptables-nft
-- ufw

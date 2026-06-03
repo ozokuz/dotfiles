@@ -1,2 +1,0 @@
-## Apps
-- blockbench-bin

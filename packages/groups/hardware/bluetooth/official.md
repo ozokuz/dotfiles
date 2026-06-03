@@ -1,3 +1,0 @@
-## Bluetooth
-- bluez
-- bluez-utils

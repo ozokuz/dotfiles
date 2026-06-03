@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGE_DIR="$ROOT_DIR/packages"
+GROUP_PACKAGE_MANIFEST="$PACKAGE_DIR/groups.tsv"
 DOTS_DIR="$ROOT_DIR/dots"
 HOST_OVERLAY_DIR="$ROOT_DIR/host-overlays"
 
@@ -351,28 +352,99 @@ clean_manifest() {
   ' "$file" | awk 'NF'
 }
 
-manifest_files_for_source() {
+package_source_for_name() {
   local source="$1"
-  local group
 
-  [[ -f "$PACKAGE_DIR/common/$source" ]] && printf '%s\n' "$PACKAGE_DIR/common/$source"
-  [[ -f "$PACKAGE_DIR/distros/$DISTRO/$source" ]] && printf '%s\n' "$PACKAGE_DIR/distros/$DISTRO/$source"
+  case "$source" in
+    official.md|official) printf 'official\n' ;;
+    chaotic-aur.md|chaotic) printf 'chaotic\n' ;;
+    lizardbyte.md|lizardbyte) printf 'lizardbyte\n' ;;
+    aur.md|aur) printf 'aur\n' ;;
+    flatpak.txt|flatpak) printf 'flatpak\n' ;;
+    *) printf '%s\n' "$source" ;;
+  esac
+}
+
+category_matches_selected() {
+  local category="$1"
+  local selected
 
   IFS=',' read -r -a group_items <<< "$SELECTED_CATEGORIES"
-  for group in "${group_items[@]}"; do
-    validate_group_name "$group"
-    [[ -d "$PACKAGE_DIR/groups/$group" ]] || continue
-    find "$PACKAGE_DIR/groups/$group" -mindepth 1 -maxdepth 4 -type f -name "$source" -print 2>/dev/null | sort
+  for selected in "${group_items[@]}"; do
+    validate_group_name "$selected"
+    [[ "$category" == "$selected" || "$category" == "$selected/"* ]] && return 0
   done
+  return 1
+}
 
+group_manifest_entries() {
+  [[ -f "$GROUP_PACKAGE_MANIFEST" ]] || return 0
+  awk -F '\t' '
+    /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
+    NF >= 3 {
+      category = $1
+      source = $2
+      package = $3
+      sub(/^[[:space:]]+/, "", category)
+      sub(/[[:space:]]+$/, "", category)
+      sub(/^[[:space:]]+/, "", source)
+      sub(/[[:space:]]+$/, "", source)
+      sub(/^[[:space:]]+/, "", package)
+      sub(/[[:space:]]+$/, "", package)
+      if (category != "" && source != "" && package != "") print category "\t" source "\t" package
+    }
+  ' "$GROUP_PACKAGE_MANIFEST"
+}
+
+legacy_manifest_entries_for_source() {
+  local source="$1"
+  local file category item package_source
+
+  if [[ -f "$PACKAGE_DIR/common/$source" ]]; then
+    clean_manifest "$PACKAGE_DIR/common/$source" | awk -v source="$(package_source_for_name "$source")" 'NF { print "common\t" source "\t" $0 }'
+  fi
+  [[ -f "$PACKAGE_DIR/distros/$DISTRO/$source" ]] && clean_manifest "$PACKAGE_DIR/distros/$DISTRO/$source" | awk -v source="$(package_source_for_name "$source")" -v distro="$DISTRO" 'NF { print "distros/" distro "\t" source "\t" $0 }'
+
+  find "$PACKAGE_DIR/groups" -mindepth 2 -maxdepth 5 -type f -name "$source" -print 2>/dev/null | sort |
+    while IFS= read -r file; do
+      category="$(package_category_for_file "$file")"
+      package_source="$(package_source_for_name "$source")"
+      clean_manifest "$file" | awk -v category="$category" -v source="$package_source" 'NF { print category "\t" source "\t" $0 }'
+    done
+}
+
+manifest_entries_for_source() {
+  local source="$1"
+  local source_name category package_source item
+  source_name="$(package_source_for_name "$source")"
+
+  {
+    group_manifest_entries
+    legacy_manifest_entries_for_source "$source"
+  } | while IFS=$'\t' read -r category package_source item; do
+    [[ "$package_source" == "$source_name" ]] || continue
+    category_matches_selected "$category" || continue
+    printf '%s\t%s\n' "$category" "$item"
+  done
+}
+
+all_manifest_entries_for_source() {
+  local source="$1"
+  local source_name category package_source item
+  source_name="$(package_source_for_name "$source")"
+
+  {
+    group_manifest_entries
+    legacy_manifest_entries_for_source "$source"
+  } | while IFS=$'\t' read -r category package_source item; do
+    [[ "$package_source" == "$source_name" ]] || continue
+    printf '%s\t%s\n' "$category" "$item"
+  done
 }
 
 collect_items() {
   local source="$1"
-  local file
-  while IFS= read -r file; do
-    clean_manifest "$file"
-  done < <(manifest_files_for_source "$source") | awk '!seen[$0]++'
+  manifest_entries_for_source "$source" | awk -F '\t' '{ print $2 }' | awk '!seen[$0]++'
 }
 
 collect_install_items() {
@@ -425,11 +497,7 @@ collect_preset_items() {
 
 collect_all_items() {
   local source="$1"
-  local file
-  find "$PACKAGE_DIR/common" "$PACKAGE_DIR/groups" "$PACKAGE_DIR/distros" -mindepth 1 -maxdepth 4 -type f -name "$source" -print0 2>/dev/null |
-    while IFS= read -r -d '' file; do
-      clean_manifest "$file"
-    done | awk '!seen[$0]++'
+  all_manifest_entries_for_source "$source" | awk -F '\t' '{ print $2 }' | awk '!seen[$0]++'
 }
 
 available_category_items() {
@@ -475,13 +543,12 @@ package_source_for_file() {
 }
 
 all_package_entries() {
-  local source file category package_source
+  local source category item package_source
   for source in official.md chaotic-aur.md lizardbyte.md aur.md flatpak.txt; do
-    find "$PACKAGE_DIR/common" "$PACKAGE_DIR/groups" "$PACKAGE_DIR/distros" -mindepth 1 -maxdepth 4 -type f -name "$source" -print0 2>/dev/null |
-      while IFS= read -r -d '' file; do
-        category="$(package_category_for_file "$file")"
-        package_source="$(package_source_for_file "$file")"
-        clean_manifest "$file" | awk -v category="$category" -v package_source="$package_source" 'NF { print category "\t" package_source "\t" $0 }'
+    package_source="$(package_source_for_name "$source")"
+    all_manifest_entries_for_source "$source" |
+      while IFS=$'\t' read -r category item; do
+        printf '%s\t%s\t%s\n' "$category" "$package_source" "$item"
       done
   done | sort -t $'\t' -k1,1 -k3,3 -k2,2 |
     awk -F '\t' '

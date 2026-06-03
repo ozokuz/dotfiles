@@ -58,10 +58,15 @@ without opening the selector.
 ## Model
 
 - `setup.sh` is the main entrypoint.
-- `packages/groups` contains selectable package categories. Foundational categories now live here too, including `common`, `shell`, `cli-tools`, `sources`, and `ai`, alongside categories such as `dev`, `gaming`, `virtualization`, `security`, `hyprland`, and `niri`. Categories can have subcategories, for example `hardware/nvidia-gpu`, `hardware/bluetooth`, `gaming/flatpak`, and `security/firewall`; selecting a parent category includes package manifests in its nested subcategories.
+- `packages/groups.tsv` is the main package manifest. Each row is
+  `category<TAB>source<TAB>package`, where source is one of `official`,
+  `chaotic`, `aur`, `lizardbyte`, or `flatpak`. Moving a package between
+  categories is now a single-line edit. Categories can have nested paths, for
+  example `hardware/nvidia-gpu`, `gaming/flatpak`, and `security/firewall`;
+  selecting a parent category includes rows in its nested category paths.
 - `packages/hosts` contains host presets such as `saturn` and `titan`.
   Host presets choose default categories and package selections; package
-  definitions live in group and distro lists. Use `PACKAGES` for
+  definitions live in `packages/groups.tsv` and distro overlays. Use `PACKAGES` for
   host packages that apply to every distro preset, or distro-specific keys
   such as `ARCH_PACKAGES` for packages that should only be selected on one
   distro.
