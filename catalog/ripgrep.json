@@ -1,0 +1,24 @@
+{
+  "description": "ripgrep",
+  "platforms": {
+    "arch": {
+      "package": {
+        "provider": "pacman",
+        "id": "ripgrep"
+      }
+    },
+    "debian": {
+      "package": {
+        "provider": "apt",
+        "id": "ripgrep"
+      }
+    },
+    "windows": {
+      "package": {
+        "provider": "winget",
+        "id": "BurntSushi.ripgrep.MSVC",
+        "scope": "user"
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "description": "terminal",
+  "platforms": {
+    "arch": {
+      "package": {
+        "provider": "pacman",
+        "id": "ghostty"
+      }
+    },
+    "windows": {
+      "package": {
+        "provider": "winget",
+        "id": "Microsoft.WindowsTerminal",
+        "scope": "user"
+      }
+    }
+  }
+}

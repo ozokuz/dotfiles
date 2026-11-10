@@ -1,0 +1,24 @@
+{
+  "description": "firefox",
+  "platforms": {
+    "arch": {
+      "package": {
+        "provider": "pacman",
+        "id": "firefox"
+      }
+    },
+    "debian": {
+      "package": {
+        "provider": "apt",
+        "id": "firefox-esr"
+      }
+    },
+    "windows": {
+      "package": {
+        "provider": "winget",
+        "id": "Mozilla.Firefox",
+        "scope": "machine"
+      }
+    }
+  }
+}

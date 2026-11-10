@@ -1,0 +1,24 @@
+{
+  "description": "jq",
+  "platforms": {
+    "arch": {
+      "package": {
+        "provider": "pacman",
+        "id": "jq"
+      }
+    },
+    "debian": {
+      "package": {
+        "provider": "apt",
+        "id": "jq"
+      }
+    },
+    "windows": {
+      "package": {
+        "provider": "winget",
+        "id": "jqlang.jq",
+        "scope": "user"
+      }
+    }
+  }
+}

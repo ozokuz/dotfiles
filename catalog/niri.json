@@ -1,0 +1,11 @@
+{
+  "description": "niri",
+  "platforms": {
+    "arch": {
+      "package": {
+        "provider": "pacman",
+        "id": "niri"
+      }
+    }
+  }
+}

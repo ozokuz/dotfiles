@@ -1,0 +1,10 @@
+[init]
+    defaultBranch = {{ .git_default_branch | quote }}
+[core]
+    autocrlf = {{ .git_autocrlf }}
+{{ if .git_name }}[user]
+    name = {{ .git_name | quote }}
+    email = {{ .git_email | quote }}
+{{ end }}{{ if .git_credential_helper }}[credential]
+    helper = {{ .git_credential_helper | quote }}
+{{ end }}

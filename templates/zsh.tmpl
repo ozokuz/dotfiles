@@ -1,0 +1,7 @@
+# User-local tools take precedence; host-specific additions belong in an override.
+export PATH="$HOME/.local/bin:$PATH"
+autoload -Uz compinit
+compinit
+if command -v starship >/dev/null 2>&1; then
+    eval "$(starship init zsh)"
+fi

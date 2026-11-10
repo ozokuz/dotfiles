@@ -1,0 +1,28 @@
+{
+  "description": "bash",
+  "platforms": {
+    "arch": {
+      "package": {
+        "provider": "pacman",
+        "id": "bash"
+      }
+    },
+    "debian": {
+      "package": {
+        "provider": "apt",
+        "id": "bash"
+      }
+    }
+  },
+  "files": [
+    {
+      "target": ".bashrc",
+      "source": "templates/bash.tmpl"
+    },
+    {
+      "target": ".bash_profile",
+      "source": "templates/bash-login.sh",
+      "template": false
+    }
+  ]
+}

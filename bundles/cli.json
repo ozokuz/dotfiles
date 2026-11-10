@@ -1,0 +1,1 @@
+{"description": "A small, newly selected CLI baseline", "tools": ["git", "ripgrep", "jq"]}

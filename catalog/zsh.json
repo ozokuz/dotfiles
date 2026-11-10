@@ -1,0 +1,28 @@
+{
+  "description": "zsh",
+  "platforms": {
+    "arch": {
+      "package": {
+        "provider": "pacman",
+        "id": "zsh"
+      }
+    },
+    "debian": {
+      "package": {
+        "provider": "apt",
+        "id": "zsh"
+      }
+    }
+  },
+  "files": [
+    {
+      "target": ".zshrc",
+      "source": "templates/zsh.tmpl"
+    },
+    {
+      "target": ".zprofile",
+      "source": "templates/shell-login.sh",
+      "template": false
+    }
+  ]
+}

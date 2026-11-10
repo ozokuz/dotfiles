@@ -1,0 +1,24 @@
+{
+  "description": "neovim",
+  "platforms": {
+    "arch": {
+      "package": {
+        "provider": "pacman",
+        "id": "neovim"
+      }
+    },
+    "debian": {
+      "package": {
+        "provider": "apt",
+        "id": "neovim"
+      }
+    },
+    "windows": {
+      "package": {
+        "provider": "winget",
+        "id": "Neovim.Neovim",
+        "scope": "machine"
+      }
+    }
+  }
+}

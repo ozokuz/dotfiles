@@ -1,0 +1,25 @@
+{
+  "description": "starship",
+  "platforms": {
+    "arch": {
+      "package": {
+        "provider": "pacman",
+        "id": "starship"
+      }
+    },
+    "windows": {
+      "package": {
+        "provider": "winget",
+        "id": "Starship.Starship",
+        "scope": "user"
+      }
+    }
+  },
+  "files": [
+    {
+      "target": ".config/starship.toml",
+      "source": "templates/starship.toml",
+      "template": false
+    }
+  ]
+}

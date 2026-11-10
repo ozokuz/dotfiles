@@ -1,0 +1,37 @@
+{
+  "description": "Git with shared defaults and platform-specific credential settings",
+  "files": [
+    {
+      "target": ".gitconfig",
+      "source": "templates/git.tmpl"
+    }
+  ],
+  "platforms": {
+    "arch": {
+      "package": {
+        "provider": "pacman",
+        "id": "git"
+      }
+    },
+    "debian": {
+      "package": {
+        "provider": "apt",
+        "id": "git"
+      }
+    },
+    "windows": {
+      "package": {
+        "provider": "winget",
+        "id": "Git.Git",
+        "scope": "user"
+      }
+    }
+  },
+  "settings_keys": [
+    "git_default_branch",
+    "git_name",
+    "git_email",
+    "git_credential_helper",
+    "git_autocrlf"
+  ]
+}

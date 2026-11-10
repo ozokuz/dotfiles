@@ -1,0 +1,42 @@
+name: Configuration store checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  workflow:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m unittest discover -s tests -v
+      - name: Parse PowerShell entry points
+        shell: pwsh
+        run: |
+          Get-ChildItem -Recurse -Filter *.ps1 | Where-Object FullName -NotMatch 'legacy' | ForEach-Object {
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$parseErrors) | Out-Null
+            if ($parseErrors) { throw ($parseErrors | Out-String) }
+          }
+  disposable-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Debian package and configuration integration
+        run: >-
+          docker run --rm -e ENVSTORE_DISPOSABLE=1
+          --mount type=bind,source="$PWD",target=/workspace,readonly
+          python:3.13-slim bash -c
+          'apt-get update -qq && python /workspace/tests/disposable_linux.py'
+      - name: Arch package and configuration integration
+        run: >-
+          docker run --rm -e ENVSTORE_DISPOSABLE=1
+          --mount type=bind,source="$PWD",target=/workspace,readonly
+          archlinux:base bash -c
+          'pacman -Syu --noconfirm python ca-certificates && python /workspace/tests/disposable_linux.py'

@@ -1,0 +1,8 @@
+{
+  "platform": "windows",
+  "scope": "owned",
+  "bundles": ["cli"],
+  "tools": {},
+  "settings": {},
+  "overrides": {}
+}

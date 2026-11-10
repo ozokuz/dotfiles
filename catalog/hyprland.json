@@ -1,0 +1,11 @@
+{
+  "description": "hyprland",
+  "platforms": {
+    "arch": {
+      "package": {
+        "provider": "pacman",
+        "id": "hyprland"
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "platform": "debian",
+  "scope": "user",
+  "tools": {"git": "config"},
+  "settings": {},
+  "overrides": {}
+}

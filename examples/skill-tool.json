@@ -1,0 +1,8 @@
+{
+  "description": "Example local skill; replace the source and select compatible agent destinations",
+  "platforms": {"arch": {}, "debian": {}, "windows": {}},
+  "skill": {
+    "source": "agent-skills/example",
+    "targets": [".agents/skills/example"]
+  }
+}

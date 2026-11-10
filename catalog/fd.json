@@ -1,0 +1,24 @@
+{
+  "description": "fd",
+  "platforms": {
+    "arch": {
+      "package": {
+        "provider": "pacman",
+        "id": "fd"
+      }
+    },
+    "debian": {
+      "package": {
+        "provider": "apt",
+        "id": "fd-find"
+      }
+    },
+    "windows": {
+      "package": {
+        "provider": "winget",
+        "id": "sharkdp.fd",
+        "scope": "user"
+      }
+    }
+  }
+}

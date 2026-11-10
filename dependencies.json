@@ -1,0 +1,90 @@
+{
+  "chezmoi": {
+    "version": "2.74.0",
+    "assets": {
+      "linux-amd64": {
+        "url": "https://github.com/twpayne/chezmoi/releases/download/v2.74.0/chezmoi_2.74.0_linux_amd64.tar.gz",
+        "sha256": "1b98a567f726f41540414aea4caf912699d53e248b29ccf8369cf553657b2374",
+        "member": "chezmoi"
+      },
+      "linux-arm64": {
+        "url": "https://github.com/twpayne/chezmoi/releases/download/v2.74.0/chezmoi_2.74.0_linux_arm64.tar.gz",
+        "sha256": "bf89495d1aab5e4fa0fc1ba9457837b34ee8dec9b787570f2de3e1c12a5835a5",
+        "member": "chezmoi"
+      },
+      "windows-amd64": {
+        "url": "https://github.com/twpayne/chezmoi/releases/download/v2.74.0/chezmoi_2.74.0_windows_amd64.zip",
+        "sha256": "13dee2831d371c6ce2ac30fc9ae1aad4f70c68e7d44700f6129fe4b244ee7a95",
+        "member": "chezmoi.exe"
+      },
+      "windows-arm64": {
+        "url": "https://github.com/twpayne/chezmoi/releases/download/v2.74.0/chezmoi_2.74.0_windows_arm64.zip",
+        "sha256": "99484604f4fb53d1f2b7a42da900cc0e45294180af7c86216d6c31c90cb80506",
+        "member": "chezmoi.exe"
+      }
+    }
+  },
+  "sops": {
+    "version": "3.13.3",
+    "assets": {
+      "linux-amd64": {
+        "url": "https://github.com/getsops/sops/releases/download/v3.13.3/sops-v3.13.3.linux.amd64",
+        "sha256": "e5bec3346a873ae91d871550f3e698c1aad962aff462a080e40f25fde17fef6b"
+      },
+      "linux-arm64": {
+        "url": "https://github.com/getsops/sops/releases/download/v3.13.3/sops-v3.13.3.linux.arm64",
+        "sha256": "53b0abacd38ef1b12a66d6c100956691b9cefce018d91f81e73ddf7438b94d77"
+      }
+    }
+  },
+  "age": {
+    "version": "1.3.2",
+    "assets": {
+      "linux-amd64": {
+        "url": "https://github.com/FiloSottile/age/releases/download/v1.3.2/age-v1.3.2-linux-amd64.tar.gz",
+        "sha256": "cbe24006683f8eb669266162894b9a522a1af52f2665fbc63a4bb032ed26ac10",
+        "member": "age/age"
+      },
+      "linux-arm64": {
+        "url": "https://github.com/FiloSottile/age/releases/download/v1.3.2/age-v1.3.2-linux-arm64.tar.gz",
+        "sha256": "6b8dc4333c53a5a57c9e5834e3a48f92605d7154014cd07269ff3327db5d37f4",
+        "member": "age/age"
+      },
+      "windows-amd64": {
+        "url": "https://github.com/FiloSottile/age/releases/download/v1.3.2/age-v1.3.2-windows-amd64.zip",
+        "sha256": "f48d8f8f9ebe903ab5027ed067652f2cc1db94bc206976430133b905dcd8e8c7",
+        "member": "age/age.exe"
+      },
+      "windows-arm64": {
+        "url": "https://github.com/FiloSottile/age/releases/download/v1.3.2/age-v1.3.2-windows-arm64.zip",
+        "sha256": "fae351336c8d5f30f93cc3ccdec16d1ed7851d68cdd6656d41955cc31a447c9d",
+        "member": "age/age.exe"
+      }
+    }
+  },
+  "age-keygen": {
+    "version": "1.3.2",
+    "assets": {
+      "linux-amd64": {
+        "url": "https://github.com/FiloSottile/age/releases/download/v1.3.2/age-v1.3.2-linux-amd64.tar.gz",
+        "sha256": "cbe24006683f8eb669266162894b9a522a1af52f2665fbc63a4bb032ed26ac10",
+        "member": "age/age-keygen"
+      },
+      "linux-arm64": {
+        "url": "https://github.com/FiloSottile/age/releases/download/v1.3.2/age-v1.3.2-linux-arm64.tar.gz",
+        "sha256": "6b8dc4333c53a5a57c9e5834e3a48f92605d7154014cd07269ff3327db5d37f4",
+        "member": "age/age-keygen"
+      },
+      "windows-amd64": {
+        "url": "https://github.com/FiloSottile/age/releases/download/v1.3.2/age-v1.3.2-windows-amd64.zip",
+        "sha256": "f48d8f8f9ebe903ab5027ed067652f2cc1db94bc206976430133b905dcd8e8c7",
+        "member": "age/age-keygen.exe"
+      },
+      "windows-arm64": {
+        "url": "https://github.com/FiloSottile/age/releases/download/v1.3.2/age-v1.3.2-windows-arm64.zip",
+        "sha256": "fae351336c8d5f30f93cc3ccdec16d1ed7851d68cdd6656d41955cc31a447c9d",
+        "member": "age/age-keygen.exe"
+      }
+    }
+  }
+}
