@@ -46,6 +46,18 @@ def install(ctx: Context) -> None:
         "--fetch",
         "--notify",
     ]
+    login = ctx.home / ".config" / "envstore" / "login.sh"
+    mkdir_private(login.parent)
+    text = (
+        "# Source from your shell login file to get immediate reconnect notices.\n"
+        + shlex.join(command)
+        + "\n"
+    )
+    if login.exists() and login.read_text() != text:
+        raise StoreError("Existing login notification hook differs; review before replacing")
+    login.write_text(text)
+    private(login)
+
     # systemd performs specifier expansion independently of shell quoting.
     quoted = " ".join(
         '"' + v.replace("\\", "\\\\").replace('"', '\\"').replace("%", "%%") + '"' for v in command
@@ -64,14 +76,3 @@ def install(ctx: Context) -> None:
         path.write_text(content)
     run(["systemctl", "--user", "daemon-reload"])
     run(["systemctl", "--user", "enable", "--now", "envstore-check.timer"])
-    login = ctx.home / ".config" / "envstore" / "login.sh"
-    mkdir_private(login.parent)
-    text = (
-        "# Source from your shell login file to get immediate reconnect notices.\n"
-        + shlex.join(command)
-        + "\n"
-    )
-    if login.exists() and login.read_text() != text:
-        raise StoreError("Existing login notification hook differs; review before replacing")
-    login.write_text(text)
-    private(login)

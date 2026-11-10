@@ -51,6 +51,10 @@ def installed(package: dict) -> bool:
     )
 
 
+def identity(package: dict) -> tuple[str, str, str]:
+    return package["provider"], package["id"], package.get("scope", "user")
+
+
 def allowed(ctx: Context, package: dict, allow_system: bool, tool: str) -> bool:
     system = package["provider"] in {"apt", "pacman"} or package.get("scope", "user") != "user"
     return not system or ctx.system_authorized(tool, allow_system)
@@ -103,11 +107,11 @@ def plan(ctx: Context, tools: list[dict], allow_system: bool) -> list[dict]:
             )
         result.append(entry)
     record = ctx.record()
-    selected = {t["id"] for t in tools if t["mode"] == "install" and t.get("package")}
+    selected = {identity(t["package"]) for t in tools if t["mode"] == "install" and t.get("package")}
     result.extend(
         {"kind": "package", "tool": name, "package": value["id"], "status": "cleanup-candidate"}
         for name, value in record["packages"].items()
-        if name not in selected
+        if identity(value) not in selected
     )
     return result
 
@@ -195,8 +199,13 @@ def install(
                         "--accept-source-agreements",
                     ]
                     run(command)
-            if not present or tool["id"] in record["packages"]:
-                # Existing unmanaged packages are not adopted as future removal candidates.
+            if not present:
+                # Keep superseded packages available for explicit cleanup. Ownership
+                # follows package identity, never an unrelated preinstalled mapping.
+                previous = record["packages"].get(tool["id"])
+                if previous and identity(previous) != identity(package):
+                    archived = tool["id"] + ":" + ":".join(identity(previous))
+                    record["packages"][archived] = {**previous, "tool": tool["id"]}
                 record["packages"][tool["id"]] = package
                 ctx.save(record)
         except (StoreError, OSError) as exc:
@@ -243,13 +252,13 @@ def system_actions(
 
 
 def cleanup(ctx: Context, tools: list[dict], names: list[str], allow_system: bool) -> None:
-    selected = {t["id"] for t in tools if t["mode"] == "install"}
+    selected = {identity(t["package"]) for t in tools if t["mode"] == "install" and t.get("package")}
     record = ctx.record()
     for name in names:
-        if name in selected or name not in record["packages"]:
+        if name not in record["packages"] or identity(record["packages"][name]) in selected:
             raise StoreError(f"{name} is not a package cleanup candidate")
         package = record["packages"][name]
-        if not allowed(ctx, package, allow_system, name):
+        if not allowed(ctx, package, allow_system, package.get("tool", name)):
             raise StoreError("Package removal is not authorized")
         provider, package_id = package["provider"], package["id"]
         if provider == "apt":

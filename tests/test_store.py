@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from envstore import cli, deps, files, operations, packages, secrets, skills
+from envstore import cli, deps, files, notifications, operations, packages, secrets, skills
 from envstore.core import Context, StoreError, load, resolve, run, write_json
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -166,6 +166,56 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(command.call_count, 1)
         self.assertIn("git", self.ctx.record()["packages"])
 
+    def test_package_remap_preserves_preinstalled_replacement(self):
+        original = {"provider": "apt", "id": "original"}
+        replacement = {"provider": "apt", "id": "preinstalled"}
+        tools = [{"id": "editor", "mode": "install", "package": replacement}]
+        self.ctx.system_items = frozenset({"editor"})
+        record = self.ctx.record()
+        record["packages"]["editor"] = original
+        self.ctx.save(record)
+        for upgrade in (False, True):
+            with (
+                self.subTest(upgrade=upgrade),
+                patch("envstore.packages.installed", return_value=True),
+                patch("envstore.packages.run", return_value=b"") as command,
+            ):
+                self.assertEqual(packages.install(self.ctx, tools, False, upgrade=upgrade), (set(), []))
+                self.assertEqual(self.ctx.record()["packages"], {"editor": original})
+                rows = packages.plan(self.ctx, tools, False)
+                self.assertIn(
+                    {"kind": "package", "tool": "editor", "package": "original", "status": "cleanup-candidate"},
+                    rows,
+                )
+                command.reset_mock()
+                packages.cleanup(self.ctx, tools, ["editor"], False)
+                self.assertIn("original", command.call_args.args[0])
+                self.assertNotIn("preinstalled", command.call_args.args[0])
+                self.ctx.save(record)
+
+    def test_package_remap_keeps_both_installed_packages_tracked(self):
+        original = {"provider": "apt", "id": "original"}
+        replacement = {"provider": "apt", "id": "replacement"}
+        tools = [{"id": "editor", "mode": "install", "package": replacement}]
+        record = self.ctx.record()
+        record["packages"]["editor"] = original
+        self.ctx.save(record)
+        self.ctx.system_items = frozenset({"editor"})
+        with (
+            patch("envstore.packages.installed", return_value=False),
+            patch("envstore.packages.run", return_value=b""),
+        ):
+            self.assertEqual(packages.install(self.ctx, tools, False), (set(), []))
+        tracked = self.ctx.record()["packages"]
+        self.assertEqual({p["id"] for p in tracked.values()}, {"original", "replacement"})
+        old_key = next(name for name, p in tracked.items() if p["id"] == "original")
+        with patch("envstore.packages.run", return_value=b"") as command:
+            packages.cleanup(self.ctx, tools, [old_key], False)
+            self.assertIn("original", command.call_args.args[0])
+            with self.assertRaises(StoreError):
+                packages.cleanup(self.ctx, tools, ["editor"], False)
+        self.assertEqual(self.ctx.record()["packages"], {"editor": replacement})
+
     def test_named_system_exception_does_not_grant_other_tools(self):
         self.ctx.system_items = frozenset({"git"})
         system = {"provider": "apt", "id": "git"}
@@ -213,6 +263,20 @@ class StoreTests(unittest.TestCase):
         self.assertTrue(first["outdated"])
         self.assertEqual(output.getvalue().count("out of date"), 1)
         self.assertFalse((self.home / ".gitconfig").exists())
+
+    @unittest.skipIf(os.name == "nt", "Linux login hook and user-systemd fallback")
+    def test_login_hook_survives_unavailable_user_systemd(self):
+        with (
+            patch("envstore.notifications.Path.home", return_value=self.home),
+            patch("envstore.notifications.run", side_effect=StoreError("No user bus")),
+        ):
+            with self.assertRaisesRegex(StoreError, "No user bus"):
+                notifications.install(self.ctx)
+        hook = self.home / ".config/envstore/login.sh"
+        self.assertTrue(hook.is_file())
+        self.assertIn("check --fetch --notify", hook.read_text())
+        self.assertIn(str(self.repo / "env.py"), hook.read_text())
+        self.assertEqual(hook.stat().st_mode & 0o777, 0o600)
 
     def test_secret_plan_never_decrypts_and_apply_never_leaks(self):
         write_json(
@@ -349,6 +413,24 @@ class StoreTests(unittest.TestCase):
             self.assertTrue(os.access(self.home / ".agents/skills/example/helper.sh", os.X_OK))
         (source / "SKILL.md").write_text("Changed fixture")
         self.assertNotEqual(initial, self.resolved()[2])
+
+    def test_skill_destination_overlap_respects_platform_case_sensitivity(self):
+        source = self.repo / "agent-skills/example"
+        source.mkdir(parents=True)
+        (source / "SKILL.md").write_text("Fixture")
+        skill = {"id": "skill", "skill": {"source": "agent-skills/example", "targets": [".agents/Example"]}}
+        for platform in ("windows", "debian"):
+            self.ctx.platform = platform
+            for other in (
+                {"id": "config", "files": [{"target": ".agents/example/SKILL.md"}]},
+                {"id": "other-skill", "skill": {"source": "agent-skills/example", "targets": [".agents/example"]}},
+            ):
+                with self.subTest(platform=platform, other=other["id"]):
+                    if platform == "windows":
+                        with self.assertRaisesRegex(StoreError, "overlap"):
+                            skills.materialize(self.ctx, [skill, other])
+                    else:
+                        self.assertEqual(len(skills.materialize(self.ctx, [skill, other])), 2)
 
     def test_secret_recipient_enrollment_is_scoped_and_resumable(self):
         checkout = self.root / "private-secrets"

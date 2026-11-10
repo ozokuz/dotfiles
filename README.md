@@ -131,7 +131,10 @@ then name each item to remove:
 
 Only packages installed by this tool and unchanged managed files are eligible.
 Unrelated preinstalled programs and locally edited/excepted files are preserved.
-No blanket autoremove is performed.
+No blanket autoremove is performed. Changing a package mapping preserves ownership
+of the old package without adopting an already-installed replacement. Superseded
+packages remain cleanup candidates; pass the candidate's `tool` value from `plan`
+to `cleanup --package`, including any provider/ID/scope suffix.
 
 ## Repository structure
 

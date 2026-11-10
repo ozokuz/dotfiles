@@ -94,6 +94,8 @@ def materialize(ctx: Context, tools: list[dict]) -> list[dict]:
                 )
         result.append({**tool, "files": generated})
     targets = [f["target"] for t in result for f in t.get("files", [])]
+    if ctx.platform == "windows":
+        targets = [target.casefold() for target in targets]
     if len(targets) != len(set(targets)):
         raise StoreError("Selected skills/configurations overlap target files")
     return result
