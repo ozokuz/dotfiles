@@ -84,4 +84,4 @@ eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
 
 # Mise (runtime version manager)
-eval "$(mise activate zsh)"
+#eval "$(mise activate zsh)"
